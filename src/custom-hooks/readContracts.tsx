@@ -1,59 +1,92 @@
-import { stableSwapContract } from "@/contracts/contracts";
 import { useReadContracts } from "wagmi";
-import type { Address } from "viem";
-import type { QueryObserverResult } from '@tanstack/react-query';
+import {
+  IDRXContract,
+  USDCContract,
+  EURCContract,
+} from "../contracts/contracts";
+import { formatEther } from "viem";
+import { formatEUR, formatIDR, formatUSD } from "@/util/helper";
 
-type ContractResult = [
-  { error?: undefined; result: unknown; status: "success" } | { error: Error; result?: undefined; status: "failure" },
-  { error?: undefined; result: unknown; status: "success" } | { error: Error; result?: undefined; status: "failure" }
-];
-
-interface UseTokenContractsResult {
-  balance: { result: bigint; status: "success" } | { error: Error; status: "failure" } | null;
-  isAllowance: { result: bigint; status: "success" } | { error: Error; status: "failure" } | null;
-  error: unknown;
-  isPending: boolean;
-  refetch: () => Promise<QueryObserverResult<ContractResult, Error>>;
-}
-
-type ContractConfig = {
-  address: Address;
-  abi: readonly {
-    type: string;
-    name?: string;
-    inputs?: { name: string; type: string; internalType: string }[];
-    outputs?: { name: string; type: string; internalType: string }[];
-    stateMutability?: string;
-  }[];
-};
-
-export function useTokenContracts(
-  tokenContract: ContractConfig,
-  addressUser: string,
-  swapContract = stableSwapContract // Default to `stableSwapContract`
-): UseTokenContractsResult {
-  const { data, error, isPending, refetch } = useReadContracts({
+export const useFetchBalances = (userAddress: string) => {
+  const { data, error, isLoading } = useReadContracts({
     contracts: [
       {
-        ...tokenContract,
+        ...IDRXContract,
         functionName: "balanceOf",
-        args: [addressUser],
+        args: [userAddress],
       },
       {
-        ...tokenContract,
-        functionName: "allowance",
-        args: [addressUser, swapContract.address],
+        ...USDCContract,
+        functionName: "balanceOf",
+        args: [userAddress],
+      },
+      {
+        ...EURCContract,
+        functionName: "balanceOf",
+        args: [userAddress],
       },
     ],
   });
 
-  const [balance = null, isAllowance = null] = data || [];
-  
+  // Map the data to a more usable format
+  const balances = data
+    ? data.map((balance) => ({
+        status: balance.status,
+        result: balance.result,
+        error: balance.error,
+      }))
+    : [];
+
   return {
-    balance: balance as UseTokenContractsResult['balance'],
-    isAllowance: isAllowance as UseTokenContractsResult['isAllowance'],
+    balances,
     error,
-    isPending,
-    refetch
+    isLoading,
   };
+};
+
+interface Token {
+  id: string;
+  name: string;
+  symbol: string;
+  color: string;
+  balance: string;
+}
+
+export function TokensMapping(address: string): Token[] {
+  const { balances } = useFetchBalances(address || "");
+
+  const tokens: Token[] = [
+    {
+      id: "idrx",
+      name: "Indonesian Rupiah",
+      symbol: "IDRX",
+      color: "#FF0000",
+      balance:
+        balances[0]?.status === "success"
+          ? formatIDR(formatEther(balances[0].result as bigint))
+          : "0.0",
+    },
+    {
+      id: "usdc",
+      name: "USD Coin",
+      symbol: "USDC",
+      color: "#2775CA",
+      balance:
+        balances[1]?.status === "success"
+          ? formatUSD(formatEther(balances[1].result as bigint))
+          : "0.0",
+    },
+    {
+      id: "eurc",
+      name: "Euro Coin",
+      symbol: "EURC",
+      color: "#0052B4",
+      balance:
+        balances[2]?.status === "success"
+          ? formatEUR(formatEther(balances[2].result as bigint))
+          : "0.0",
+    },
+  ];
+
+  return tokens;
 }
