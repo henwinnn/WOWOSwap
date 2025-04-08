@@ -10,7 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-// import TokenSelector from "./token-selector";
+import TokenSelector from "./token-selector";
 // import ConversionRateDisplay from "./conversion-rate-display";
 import { cn } from "@/lib/utils";
 import { useAccount } from "wagmi";
@@ -47,17 +47,23 @@ export type Token = {
 // };
 
 export default function SwapInterface() {
-  // const [fromToken, setFromToken] = useState<Token>(TokensMapping[0]);
-  // const [toToken, setToToken] = useState<Token>(TokensMapping[1]);
-  const [amount, setAmount] = useState<string>("100");
+  const { address } = useAccount();
+  const mappedTokens = TokensMapping(address || "");
+  const tokens = mappedTokens.map((token) => ({
+    ...token,
+    balance: Number(token.balance),
+  }));
+
+  const [fromToken, setFromToken] = useState(tokens[0]);
+  const [toToken, setToToken] = useState(tokens[1]);
+  const [amount, setAmount] = useState("");
   // const [rate, setRate] = useState<number>(0);
   // const [convertedAmount, setConvertedAmount] = useState<number>(0);
-  // const [isSwapping, setIsSwapping] = useState<boolean>(false);
+  const [isSwapping, setIsSwapping] = useState(false);
   // const [rateHistory, setRateHistory] = useState<number[]>([]);
   const [slippageTolerance, setSlippageTolerance] = useState<number>(0.5);
   const [isSlippageOpen, setIsSlippageOpen] = useState<boolean>(false);
 
-  const { address } = useAccount();
   const mappingToken = TokensMapping(address || "");
   // useEffect(() => {
   //   if (error) {
@@ -88,18 +94,19 @@ export default function SwapInterface() {
   //   return () => clearInterval(interval);
   // }, [fromToken.id, toToken.id, amount]);
 
-  // const handleSwap = () => {
-  //   setIsSwapping(true);
-  //   setTimeout(() => {
-  //     setFromToken(toToken);
-  //     setToToken(fromToken);
-  //     setIsSwapping(false);
-  //   }, 300);
-  // };
+  const handleSwap = () => {
+    setIsSwapping(true);
+    setTimeout(() => {
+      setFromToken(toToken);
+      setToToken(fromToken);
+      setIsSwapping(false);
+    }, 300);
+  };
 
-  const handleAmountChange = (value: string) => {
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     // Only allow numbers and a single decimal point
-    if (/^(\d*\.?\d{0,6})$/.test(value) || value === "") {
+    if (value === "" || /^(\d*\.?\d{0,6})$/.test(value)) {
       setAmount(value);
       // setConvertedAmount(Number.parseFloat(value || "0") * rate);
     }
@@ -119,7 +126,7 @@ export default function SwapInterface() {
         transition={{ duration: 0.5 }}
       >
         <h1 className="text-3xl font-bold text-white tracking-tight">
-          WOWOswap
+          WOWOSwap
         </h1>
         <p className="text-gray-400 mt-1">Seamless Stablecoin Swaps</p>
       </motion.div>
@@ -156,9 +163,10 @@ export default function SwapInterface() {
                   <PopoverTrigger asChild>
                     <motion.button
                       className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-800 text-gray-400 hover:bg-gray-750 hover:text-white transition-all duration-200"
-                      whileHover={{ rotate: 30, scale: 1.1 }}
+                      // whileHover={{ rotate: 90, scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      animate={{ rotate: isSlippageOpen ? 30 : 0 }}
+                      animate={{ rotate: isSlippageOpen ? 180 : 0 }}
+                      transition={{ duration: 0 }}
                     >
                       <Settings2 className="w-4 h-4" />
                       <span className="sr-only">
@@ -229,31 +237,36 @@ export default function SwapInterface() {
               </div>
 
               {/* Available Balance section */}
-              <div className="bg-gray-800/50 rounded-xl p-3">
-                <h3 className="text-sm text-gray-400 mb-2">
-                  Available Balance
-                </h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {mappingToken.map((token) => (
-                    <div key={token.id} className="flex flex-col items-center">
+              {address && (
+                <div className="bg-gray-800/50 rounded-xl p-3">
+                  <h3 className="text-sm text-gray-400 mb-2">
+                    Available Balance
+                  </h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {mappingToken.map((token) => (
                       <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center mb-1"
-                        style={{ backgroundColor: token.color }}
+                        key={token.id}
+                        className="flex flex-col items-center"
                       >
-                        <span className="text-xs font-bold text-white">
-                          {token.symbol.charAt(0)}
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center mb-1"
+                          style={{ backgroundColor: token.color }}
+                        >
+                          <span className="text-xs font-bold text-white">
+                            {token.symbol.charAt(0)}
+                          </span>
+                        </div>
+                        <span className="text-white text-sm font-medium">
+                          {token.symbol}
+                        </span>
+                        <span className="text-gray-400 text-xs">
+                          {token.balance}
                         </span>
                       </div>
-                      <span className="text-white text-sm font-medium">
-                        {token.symbol}
-                      </span>
-                      <span className="text-gray-400 text-xs">
-                        {token.balance} {token.symbol}
-                      </span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* From token */}
               <div className="space-y-2">
@@ -265,15 +278,15 @@ export default function SwapInterface() {
                   </span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  {/* <TokenSelector
+                  <TokenSelector
                     selectedToken={fromToken}
                     tokens={tokens}
                     onSelect={setFromToken}
-                  /> */}
+                  />
                   <input
-                    type="text"
+                    type="number"
                     value={amount}
-                    onChange={(e) => handleAmountChange(e.target.value)}
+                    onChange={handleAmountChange}
                     className="flex-1 bg-gray-800 border-0 rounded-xl p-3 text-white text-xl focus:ring-2 focus:ring-white/20 focus:outline-none transition-all duration-300 hover:bg-gray-750 focus:bg-gray-750"
                     placeholder="0.00"
                   />
@@ -293,9 +306,9 @@ export default function SwapInterface() {
                     color: "#000000",
                   }}
                   whileTap={{ scale: 0.9 }}
-                  // animate={{ rotate: isSwapping ? 180 : 0 }}
+                  animate={{ rotate: isSwapping ? 180 : 0 }}
                   transition={{ duration: 0.3 }}
-                  // onClick={handleSwap}
+                  onClick={handleSwap}
                   className="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-700 text-white shadow-lg"
                 >
                   <ArrowDownUp className="w-5 h-5" />
@@ -311,23 +324,21 @@ export default function SwapInterface() {
                   </span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  {/* <TokenSelector
+                  <TokenSelector
                     selectedToken={toToken}
                     tokens={tokens}
                     onSelect={setToToken}
-                  /> */}
-                  {/* <div className="flex-1 bg-gray-800 rounded-xl p-3 text-white text-xl transition-all duration-300 hover:bg-gray-750">
+                  />
+                  <div className="flex-1 bg-gray-800 rounded-xl p-3 text-white text-xl transition-all duration-300 hover:bg-gray-750">
                     <motion.span
-                      key={convertedAmount.toString()}
+                      // key={convertedAmount.toString()}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      {convertedAmount.toLocaleString(undefined, {
-                        maximumFractionDigits: 6,
-                      })}
+                      0
                     </motion.span>
-                  </div> */}
+                  </div>
                 </div>
               </div>
 
@@ -340,58 +351,11 @@ export default function SwapInterface() {
               </div>
 
               {/* Expected Calculation */}
-              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
-                <div className="flex items-center mb-2">
-                  <svg
-                    className="w-4 h-4 mr-2 text-blue-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect
-                      x="2"
-                      y="7"
-                      width="20"
-                      height="14"
-                      rx="2"
-                      ry="2"
-                    ></rect>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                  </svg>
-                  <h3 className="text-sm font-medium text-blue-400">
-                    Expected Calculation
-                  </h3>
-                </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Exchange Rate:</span>
-                    {/* <span className="text-white font-medium">
-                      1 {fromToken.symbol} ={" "}
-                      {rate.toLocaleString(undefined, {
-                        maximumFractionDigits: 6,
-                      })}{" "}
-                      {toToken.symbol}
-                    </span> */}
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Expected Output:</span>
-                    {/* <span className="text-white font-medium">
-                      {convertedAmount.toLocaleString(undefined, {
-                        maximumFractionDigits: 6,
-                      })}{" "}
-                      {toToken.symbol}
-                    </span> */}
-                  </div>
-
-                  <div className="flex items-center text-xs text-gray-500">
+              {amount && (
+                <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
+                  <div className="flex items-center mb-2">
                     <svg
-                      className="w-3 h-3 mr-1"
+                      className="w-4 h-4 mr-2 text-blue-400"
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
                       fill="none"
@@ -400,16 +364,66 @@ export default function SwapInterface() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <line x1="12" y1="16" x2="12" y2="12"></line>
-                      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      <rect
+                        x="2"
+                        y="7"
+                        width="20"
+                        height="14"
+                        rx="2"
+                        ry="2"
+                      ></rect>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
                     </svg>
-                    <span>Rate includes % swap fee</span>
+                    <h3 className="text-sm font-medium text-blue-400">
+                      Expected Calculation
+                    </h3>
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Exchange Rate:</span>
+                      {/* <span className="text-white font-medium">
+                      1 {fromToken.symbol} ={" "}
+                      {rate.toLocaleString(undefined, {
+                        maximumFractionDigits: 6,
+                      })}{" "}
+                      {toToken.symbol}
+                    </span> */}
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Expected Output:</span>
+                      {/* <span className="text-white font-medium">
+                      {convertedAmount.toLocaleString(undefined, {
+                        maximumFractionDigits: 6,
+                      })}{" "}
+                      {toToken.symbol}
+                    </span> */}
+                    </div>
+
+                    <div className="flex items-center text-xs text-gray-500">
+                      <svg
+                        className="w-3 h-3 mr-1"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      </svg>
+                      <span>Rate includes % swap fee</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Swap button */}
+
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -417,6 +431,7 @@ export default function SwapInterface() {
                 <Button
                   className="w-full h-14 text-lg font-medium bg-white hover:bg-gray-200 text-black rounded-full transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
                   onClick={() => {}}
+                  disabled={!amount || !address}
                 >
                   <motion.div
                     className="flex items-center"
