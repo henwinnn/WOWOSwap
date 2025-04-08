@@ -10,7 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-// import TokenSelector from "./token-selector";
+import TokenSelector from "./token-selector";
 // import ConversionRateDisplay from "./conversion-rate-display";
 import { cn } from "@/lib/utils";
 import { useAccount } from "wagmi";
@@ -47,17 +47,23 @@ export type Token = {
 // };
 
 export default function SwapInterface() {
-  // const [fromToken, setFromToken] = useState<Token>(TokensMapping[0]);
-  // const [toToken, setToToken] = useState<Token>(TokensMapping[1]);
-  const [amount, setAmount] = useState<string>("100");
+  const { address } = useAccount();
+  const mappedTokens = TokensMapping(address || "");
+  const tokens = mappedTokens.map((token) => ({
+    ...token,
+    balance: Number(token.balance),
+  }));
+
+  const [fromToken, setFromToken] = useState(tokens[0]);
+  const [toToken, setToToken] = useState(tokens[1]);
+  const [amount, setAmount] = useState("");
   // const [rate, setRate] = useState<number>(0);
   // const [convertedAmount, setConvertedAmount] = useState<number>(0);
-  // const [isSwapping, setIsSwapping] = useState<boolean>(false);
+  const [isSwapping, setIsSwapping] = useState(false);
   // const [rateHistory, setRateHistory] = useState<number[]>([]);
   const [slippageTolerance, setSlippageTolerance] = useState<number>(0.5);
   const [isSlippageOpen, setIsSlippageOpen] = useState<boolean>(false);
 
-  const { address } = useAccount();
   const mappingToken = TokensMapping(address || "");
   // useEffect(() => {
   //   if (error) {
@@ -88,18 +94,19 @@ export default function SwapInterface() {
   //   return () => clearInterval(interval);
   // }, [fromToken.id, toToken.id, amount]);
 
-  // const handleSwap = () => {
-  //   setIsSwapping(true);
-  //   setTimeout(() => {
-  //     setFromToken(toToken);
-  //     setToToken(fromToken);
-  //     setIsSwapping(false);
-  //   }, 300);
-  // };
+  const handleSwap = () => {
+    setIsSwapping(true);
+    setTimeout(() => {
+      setFromToken(toToken);
+      setToToken(fromToken);
+      setIsSwapping(false);
+    }, 300);
+  };
 
-  const handleAmountChange = (value: string) => {
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     // Only allow numbers and a single decimal point
-    if (/^(\d*\.?\d{0,6})$/.test(value) || value === "") {
+    if (value === "" || /^(\d*\.?\d{0,6})$/.test(value)) {
       setAmount(value);
       // setConvertedAmount(Number.parseFloat(value || "0") * rate);
     }
@@ -248,7 +255,7 @@ export default function SwapInterface() {
                         {token.symbol}
                       </span>
                       <span className="text-gray-400 text-xs">
-                        {token.balance} {token.symbol}
+                        {token.balance}
                       </span>
                     </div>
                   ))}
@@ -265,15 +272,15 @@ export default function SwapInterface() {
                   </span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  {/* <TokenSelector
+                  <TokenSelector
                     selectedToken={fromToken}
                     tokens={tokens}
                     onSelect={setFromToken}
-                  /> */}
+                  />
                   <input
-                    type="text"
+                    type="number"
                     value={amount}
-                    onChange={(e) => handleAmountChange(e.target.value)}
+                    onChange={handleAmountChange}
                     className="flex-1 bg-gray-800 border-0 rounded-xl p-3 text-white text-xl focus:ring-2 focus:ring-white/20 focus:outline-none transition-all duration-300 hover:bg-gray-750 focus:bg-gray-750"
                     placeholder="0.00"
                   />
@@ -293,9 +300,9 @@ export default function SwapInterface() {
                     color: "#000000",
                   }}
                   whileTap={{ scale: 0.9 }}
-                  // animate={{ rotate: isSwapping ? 180 : 0 }}
+                  animate={{ rotate: isSwapping ? 180 : 0 }}
                   transition={{ duration: 0.3 }}
-                  // onClick={handleSwap}
+                  onClick={handleSwap}
                   className="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-700 text-white shadow-lg"
                 >
                   <ArrowDownUp className="w-5 h-5" />
@@ -311,23 +318,21 @@ export default function SwapInterface() {
                   </span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  {/* <TokenSelector
+                  <TokenSelector
                     selectedToken={toToken}
                     tokens={tokens}
                     onSelect={setToToken}
-                  /> */}
-                  {/* <div className="flex-1 bg-gray-800 rounded-xl p-3 text-white text-xl transition-all duration-300 hover:bg-gray-750">
+                  />
+                  <div className="flex-1 bg-gray-800 rounded-xl p-3 text-white text-xl transition-all duration-300 hover:bg-gray-750">
                     <motion.span
-                      key={convertedAmount.toString()}
+                      // key={convertedAmount.toString()}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      {convertedAmount.toLocaleString(undefined, {
-                        maximumFractionDigits: 6,
-                      })}
+                      0
                     </motion.span>
-                  </div> */}
+                  </div>
                 </div>
               </div>
 
