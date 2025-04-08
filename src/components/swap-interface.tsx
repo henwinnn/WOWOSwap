@@ -126,7 +126,7 @@ export default function SwapInterface() {
         transition={{ duration: 0.5 }}
       >
         <h1 className="text-3xl font-bold text-white tracking-tight">
-          WOWOswap
+          WOWOSwap
         </h1>
         <p className="text-gray-400 mt-1">Seamless Stablecoin Swaps</p>
       </motion.div>
@@ -163,9 +163,10 @@ export default function SwapInterface() {
                   <PopoverTrigger asChild>
                     <motion.button
                       className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-800 text-gray-400 hover:bg-gray-750 hover:text-white transition-all duration-200"
-                      whileHover={{ rotate: 30, scale: 1.1 }}
+                      // whileHover={{ rotate: 90, scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      animate={{ rotate: isSlippageOpen ? 30 : 0 }}
+                      animate={{ rotate: isSlippageOpen ? 180 : 0 }}
+                      transition={{ duration: 0 }}
                     >
                       <Settings2 className="w-4 h-4" />
                       <span className="sr-only">
