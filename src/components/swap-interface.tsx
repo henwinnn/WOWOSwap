@@ -430,9 +430,7 @@ export default function SwapInterface() {
                 <Button
                   className="w-full h-14 text-lg font-medium bg-white hover:bg-gray-200 text-black rounded-full transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
                   onClick={() => {}}
-                  disabled={
-                    (!amount || !address) && fromToken.id === toToken.id
-                  }
+                  disabled={!amount || !address || fromToken.id === toToken.id}
                 >
                   <motion.div
                     className="flex items-center"
