@@ -111,7 +111,17 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 
+body {
+  width: 100vw;
+  overflow-x: hidden;
+  /* padding-right: calc(0 - 15px) !important; */
+}
 @layer base {
   * {
     @apply border-border outline-ring/50;
