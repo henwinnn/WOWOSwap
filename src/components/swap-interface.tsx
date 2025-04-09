@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowDownUp, ArrowRight, Settings2, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import TokenSelector from "./token-selector";
 import { cn } from "@/lib/utils";
 import { useAccount } from "wagmi";
 import { TokensMapping } from "../custom-hooks/readContracts";
+import ConversionRateDisplay from "./conversion-rate-display";
 
 // Token types and initial data
 export type Token = {
@@ -26,25 +27,20 @@ export type Token = {
 };
 
 // Exchange rate simulation
-// const getExchangeRate = (from: string, to: string): number => {
-//   const rates: Record<string, Record<string, number>> = {
-//     idrx: {
-//       usdc: 0.000063 + (Math.random() * 0.000002 - 0.000001),
-//       eurc: 0.000058 + (Math.random() * 0.000002 - 0.000001),
-//     },
-//     usdc: {
-//       eurc: 0.92 + (Math.random() * 0.02 - 0.01),
-//       idrx: 15750 + (Math.random() * 300 - 150),
-//     },
-//     eurc: {
-//       usdc: 1.08 + (Math.random() * 0.02 - 0.01),
-//       idrx: 17100 + (Math.random() * 300 - 150),
-//     },
-//   };
+const getExchangeRate = (from: string, to: string): number => {
+  const exchangeRates: Record<string, number> = {
+    "IDRX-USDC": 0.0000606, // 1 IDRX = 0.0000606 USDC (1/16500)
+    "IDRX-EURC": 0.0000557, // 1 IDRX = 0.0000557 EURC (1/17944)
+    "USDC-IDRX": 16500, // 1 USDC = 16500 IDRX
+    "USDC-EURC": 1.09, // 1 USDC = 1.09 EURC
+    "EURC-IDRX": 17944, // 1 EURC = 17944 IDRX
+    "EURC-USDC": 0.92, // 1 EURC = 0.92 USDC
+  };
 
-//   if (from === to) return 1;
-//   return rates[from]?.[to] || 1;
-// };
+  if (from === to) return 1;
+  const key = `${from.toUpperCase()}-${to.toUpperCase()}`;
+  return exchangeRates[key] || 1;
+};
 
 export default function SwapInterface() {
   const { address } = useAccount();
@@ -57,13 +53,13 @@ export default function SwapInterface() {
   const [fromToken, setFromToken] = useState(tokens[0]);
   const [toToken, setToToken] = useState(tokens[1]);
   const [amount, setAmount] = useState("");
-  // const [rate, setRate] = useState<number>(0);
-  // const [convertedAmount, setConvertedAmount] = useState<number>(0);
+  const [rate, setRate] = useState(0);
+  const [convertedAmount, setConvertedAmount] = useState(0);
   const [isSwapping, setIsSwapping] = useState(false);
-  // const [rateHistory, setRateHistory] = useState<number[]>([]);
+  const [rateHistory, setRateHistory] = useState<number[]>([]);
   const [slippageTolerance, setSlippageTolerance] = useState<number>(0.5);
   const [isSlippageOpen, setIsSlippageOpen] = useState<boolean>(false);
-
+  const [swapFee, setSwapFee] = useState(0.3);
   const mappingToken = TokensMapping(address || "");
   // useEffect(() => {
   //   if (error) {
@@ -81,18 +77,21 @@ export default function SwapInterface() {
   // }, [balances, error]);
 
   // Simulate real-time rate updates
-  // useEffect(() => {
-  //   const updateRate = () => {
-  //     const newRate = getExchangeRate(fromToken.id, toToken.id);
-  //     setRate(newRate);
-  //     setConvertedAmount(Number.parseFloat(amount || "0") * newRate);
-  //     setRateHistory((prev) => [...prev.slice(-9), newRate]);
-  //   };
+  useEffect(() => {
+    const updateRate = () => {
+      const newRate = getExchangeRate(fromToken.id, toToken.id);
+      setRate(newRate);
+      setSwapFee(0.3);
 
-  //   updateRate();
-  //   const interval = setInterval(updateRate, 3000);
-  //   return () => clearInterval(interval);
-  // }, [fromToken.id, toToken.id, amount]);
+      setConvertedAmount(Number(amount) * newRate);
+
+      setRateHistory((prev) => [...prev.slice(-9), newRate]);
+    };
+
+    updateRate();
+    const interval = setInterval(updateRate, 3000);
+    return () => clearInterval(interval);
+  }, [fromToken.id, toToken.id, amount]);
 
   const handleSwap = () => {
     setIsSwapping(true);
@@ -138,12 +137,12 @@ export default function SwapInterface() {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="mb-8"
       >
-        {/* <ConversionRateDisplay
+        <ConversionRateDisplay
           fromToken={fromToken}
           toToken={toToken}
           rate={rate}
           rateHistory={rateHistory}
-        /> */}
+        />
       </motion.div>
 
       {/* Main swap card */}
@@ -351,7 +350,7 @@ export default function SwapInterface() {
               </div>
 
               {/* Expected Calculation */}
-              {amount && (
+              {amount && fromToken.id !== toToken.id && (
                 <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
                   <div className="flex items-center mb-2">
                     <svg
@@ -382,23 +381,23 @@ export default function SwapInterface() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Exchange Rate:</span>
-                      {/* <span className="text-white font-medium">
-                      1 {fromToken.symbol} ={" "}
-                      {rate.toLocaleString(undefined, {
-                        maximumFractionDigits: 6,
-                      })}{" "}
-                      {toToken.symbol}
-                    </span> */}
+                      <span className="text-white font-medium">
+                        1 {fromToken.symbol} ={" "}
+                        {rate.toLocaleString(undefined, {
+                          maximumFractionDigits: 6,
+                        })}{" "}
+                        {toToken.symbol}
+                      </span>
                     </div>
 
                     <div className="flex justify-between">
                       <span className="text-gray-400">Expected Output:</span>
-                      {/* <span className="text-white font-medium">
-                      {convertedAmount.toLocaleString(undefined, {
-                        maximumFractionDigits: 6,
-                      })}{" "}
-                      {toToken.symbol}
-                    </span> */}
+                      <span className="text-white font-medium">
+                        {convertedAmount.toLocaleString(undefined, {
+                          maximumFractionDigits: 6,
+                        })}{" "}
+                        {toToken.symbol}
+                      </span>
                     </div>
 
                     <div className="flex items-center text-xs text-gray-500">
@@ -416,7 +415,7 @@ export default function SwapInterface() {
                         <line x1="12" y1="16" x2="12" y2="12"></line>
                         <line x1="12" y1="8" x2="12.01" y2="8"></line>
                       </svg>
-                      <span>Rate includes % swap fee</span>
+                      <span>Rate includes {swapFee}% swap fee</span>
                     </div>
                   </div>
                 </div>
@@ -431,7 +430,9 @@ export default function SwapInterface() {
                 <Button
                   className="w-full h-14 text-lg font-medium bg-white hover:bg-gray-200 text-black rounded-full transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
                   onClick={() => {}}
-                  disabled={!amount || !address}
+                  disabled={
+                    (!amount || !address) && fromToken.id === toToken.id
+                  }
                 >
                   <motion.div
                     className="flex items-center"
