@@ -80,124 +80,152 @@ export default function ConversionRateDisplay({ fromToken, toToken, rate, rateHi
 
   return (
     <motion.div
-      className="relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      whileHover={{ scale: 1.02 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+      className="mb-8"
     >
-      {/* Minimalist conversion rate display */}
-      <div className="text-center">
-        {/* Title */}
-        <motion.h2 className="text-gray-400 text-sm font-medium mb-1" animate={{ opacity: isHovered ? 1 : 0.7 }}>
-          Live Exchange Rate
-        </motion.h2>
-
-        {/* Main rate display */}
-        <div className="flex items-center justify-center mb-2">
-          <motion.div
-            className="flex items-center"
-            animate={{
-              x: isHovered ? -5 : 0,
-              scale: isHovered ? 1.05 : 1,
-            }}
+      <motion.div
+        className="relative"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        whileHover={{ scale: 1.02 }}
+        transition={{ duration: 0.3 }}
+      >
+        {/* Minimalist conversion rate display */}
+        <div className="text-center">
+          {/* Title */}
+          <motion.h2
+            className="text-gray-400 text-sm font-medium mb-1"
+            animate={{ opacity: isHovered ? 1 : 0.7 }}
           >
-            <div
-              className="w-6 h-6 rounded-full flex items-center justify-center mr-2"
-              style={{ backgroundColor: fromToken.color }}
+            Live Exchange Rate
+          </motion.h2>
+
+          {/* Main rate display */}
+          <div className="flex items-center justify-center mb-2">
+            <motion.div
+              className="flex items-center"
+              animate={{
+                x: isHovered ? -5 : 0,
+                scale: isHovered ? 1.05 : 1,
+              }}
             >
-              <span className="text-xs font-bold text-white">{fromToken.symbol.charAt(0)}</span>
-            </div>
-            <span className="text-white font-medium">{fromToken.symbol}</span>
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center mr-2"
+                style={{ backgroundColor: fromToken.color }}
+              >
+                <span className="text-xs font-bold text-white">
+                  {fromToken.symbol.charAt(0)}
+                </span>
+              </div>
+              <span className="text-white font-medium">{fromToken.symbol}</span>
+            </motion.div>
+
+            <motion.div
+              className="mx-3"
+              animate={{
+                rotate: isUpdating ? 90 : 0,
+                scale: isHovered ? 1.2 : 1,
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              {trend === "up" ? (
+                <TrendingUp className="h-5 w-5 text-green-500" />
+              ) : trend === "down" ? (
+                <TrendingDown className="h-5 w-5 text-red-500" />
+              ) : (
+                <span className="text-gray-400">→</span>
+              )}
+            </motion.div>
+
+            <motion.div
+              className="flex items-center"
+              animate={{
+                x: isHovered ? 5 : 0,
+                scale: isHovered ? 1.05 : 1,
+              }}
+            >
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center mr-2"
+                style={{ backgroundColor: toToken.color }}
+              >
+                <span className="text-xs font-bold text-white">
+                  {toToken.symbol.charAt(0)}
+                </span>
+              </div>
+              <span className="text-white font-medium">{toToken.symbol}</span>
+            </motion.div>
+          </div>
+
+          {/* Rate value */}
+          <motion.div
+            key={rate.toString()}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: isHovered ? 1.1 : 1,
+            }}
+            className={`text-4xl font-bold mb-2 ${
+              trend === "up"
+                ? "text-green-500"
+                : trend === "down"
+                ? "text-red-500"
+                : "text-white"
+            }`}
+            transition={{ duration: 0.3 }}
+          >
+            {rate.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 6,
+            })}
           </motion.div>
 
+          {/* Mini chart - only visible on hover */}
           <motion.div
-            className="mx-3"
+            className="h-12 overflow-hidden"
+            initial={{ opacity: 0, height: 0 }}
             animate={{
-              rotate: isUpdating ? 90 : 0,
-              scale: isHovered ? 1.2 : 1,
+              opacity: isHovered ? 1 : 0,
+              height: isHovered ? 48 : 0,
             }}
             transition={{ duration: 0.3 }}
           >
-            {trend === "up" ? (
-              <TrendingUp className="h-5 w-5 text-green-500" />
-            ) : trend === "down" ? (
-              <TrendingDown className="h-5 w-5 text-red-500" />
-            ) : (
-              <span className="text-gray-400">→</span>
-            )}
+            <canvas
+              ref={canvasRef}
+              width={300}
+              height={48}
+              className="w-full h-full"
+            />
           </motion.div>
 
-          <motion.div
-            className="flex items-center"
-            animate={{
-              x: isHovered ? 5 : 0,
-              scale: isHovered ? 1.05 : 1,
-            }}
+          {/* Rate description */}
+          <motion.p
+            className="text-gray-400 text-xs mt-1"
+            animate={{ opacity: isHovered ? 1 : 0.7 }}
           >
-            <div
-              className="w-6 h-6 rounded-full flex items-center justify-center mr-2"
-              style={{ backgroundColor: toToken.color }}
-            >
-              <span className="text-xs font-bold text-white">{toToken.symbol.charAt(0)}</span>
-            </div>
-            <span className="text-white font-medium">{toToken.symbol}</span>
-          </motion.div>
+            1 {fromToken.symbol} ={" "}
+            {rate.toLocaleString(undefined, { maximumFractionDigits: 6 })}{" "}
+            {toToken.symbol}
+          </motion.p>
         </div>
 
-        {/* Rate value */}
-        <motion.div
-          key={rate.toString()}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{
-            opacity: 1,
-            y: 0,
-            scale: isHovered ? 1.1 : 1,
-          }}
-          className={`text-4xl font-bold mb-2 ${
-            trend === "up" ? "text-green-500" : trend === "down" ? "text-red-500" : "text-white"
-          }`}
-          transition={{ duration: 0.3 }}
-        >
-          {rate.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 6,
-          })}
-        </motion.div>
-
-        {/* Mini chart - only visible on hover */}
-        <motion.div
-          className="h-12 overflow-hidden"
-          initial={{ opacity: 0, height: 0 }}
-          animate={{
-            opacity: isHovered ? 1 : 0,
-            height: isHovered ? 48 : 0,
-          }}
-          transition={{ duration: 0.3 }}
-        >
-          <canvas ref={canvasRef} width={300} height={48} className="w-full h-full" />
-        </motion.div>
-
-        {/* Rate description */}
-        <motion.p className="text-gray-400 text-xs mt-1" animate={{ opacity: isHovered ? 1 : 0.7 }}>
-          1 {fromToken.symbol} = {rate.toLocaleString(undefined, { maximumFractionDigits: 6 })} {toToken.symbol}
-        </motion.p>
-      </div>
-
-      {/* Pulse animation on rate update */}
-      <AnimatePresence>
-        {isUpdating && (
-          <motion.div
-            className="absolute inset-0 rounded-full bg-white/5"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 0.2, scale: 1.2 }}
-            exit={{ opacity: 0, scale: 1.5 }}
-            transition={{ duration: 0.5 }}
-            style={{ zIndex: -1 }}
-          />
-        )}
-      </AnimatePresence>
+        {/* Pulse animation on rate update */}
+        <AnimatePresence>
+          {isUpdating && (
+            <motion.div
+              className="absolute inset-0 rounded-full bg-white/5"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 0.2, scale: 1.2 }}
+              exit={{ opacity: 0, scale: 1.5 }}
+              transition={{ duration: 0.5 }}
+              style={{ zIndex: -1 }}
+            />
+          )}
+        </AnimatePresence>
+      </motion.div>
     </motion.div>
-  )
+  );
 }
 
