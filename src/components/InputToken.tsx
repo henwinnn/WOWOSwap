@@ -6,7 +6,8 @@ import { Token } from "./swap-interface";
 
 interface InputTokenProps {
   direction: "from" | "to";
-  fromToken: Token;
+  selectedToken: Token;
+  otherTokenId: string;
   tokens: Token[];
   amount: string;
   setFromToken: (token: Token) => void;
@@ -15,7 +16,8 @@ interface InputTokenProps {
 
 export default function InputToken({
   direction,
-  fromToken,
+  selectedToken,
+  otherTokenId,
   tokens,
   amount,
   setFromToken,
@@ -26,13 +28,14 @@ export default function InputToken({
       <div className="flex justify-between">
         <label className="text-sm text-gray-400">{direction}</label>
         <span className="text-sm text-gray-400">
-          {/* Balance: {fromToken.balance.toLocaleString()}{" "}
-                        {fromToken.symbol} */}
+          {/* Balance: {selectedToken.balance.toLocaleString()}{" "}
+                        {selectedToken.symbol} */}
         </span>
       </div>
       <div className="flex items-center space-x-3">
         <TokenSelector
-          selectedToken={fromToken}
+          selectedToken={selectedToken}
+          otherTokenId={otherTokenId}
           tokens={tokens}
           onSelect={setFromToken}
         />

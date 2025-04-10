@@ -155,7 +155,8 @@ export default function SwapInterface() {
               {/* From token */}
               <InputToken
                 direction="from"
-                fromToken={fromToken}
+                selectedToken={fromToken}
+                otherTokenId={toToken.id}
                 tokens={tokens}
                 amount={amount}
                 setFromToken={setFromToken}
@@ -168,7 +169,8 @@ export default function SwapInterface() {
               {/* To token */}
               <InputToken
                 direction="to"
-                fromToken={toToken}
+                selectedToken={toToken}
+                otherTokenId={fromToken.id}
                 tokens={tokens}
                 amount=""
                 setFromToken={setFromToken}
