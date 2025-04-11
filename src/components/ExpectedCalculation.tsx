@@ -1,6 +1,7 @@
 "use client";
 
-import { formatEUR, formatIDR, formatUSD } from "@/util/helper";
+import { truncateToDecimals } from "@/util/helper";
+// import { formatEUR, formatIDR, formatUSD } from "@/util/helper";
 import { Token } from "./swap-interface";
 
 interface ExpectedCalculationProps {
@@ -10,6 +11,7 @@ interface ExpectedCalculationProps {
   convertedAmount: number;
   swapFee: number;
   amountOut: string;
+  decimal: number;
 }
 
 export default function ExpectedCalculation({
@@ -19,18 +21,9 @@ export default function ExpectedCalculation({
   // convertedAmount,
   swapFee,
   amountOut,
+  decimal,
 }: ExpectedCalculationProps) {
-  let tempAmount: string = ""; // Changed from number to string
-  if (toToken.symbol === "IDRX") {
-    tempAmount = formatIDR(amountOut);
-  }
-  if (toToken.symbol === "USDC") {
-    tempAmount = formatUSD(amountOut);
-  }
-  if (toToken.symbol === "EURC") {
-    tempAmount = formatEUR(amountOut);
-  }
-
+  const expectedRealValue = decimal === 2 ? 3 : 6;
   return (
     <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
       <div className="flex items-center mb-2">
@@ -57,9 +50,14 @@ export default function ExpectedCalculation({
           <span className="text-gray-400">Exchange Rate:</span>
           <span className="text-white font-medium">
             1 {fromToken.symbol} =
-            {parseFloat(rate).toLocaleString(undefined, {
-              maximumFractionDigits: 6,
-            })}{" "}
+            {parseFloat(
+              truncateToDecimals(Number(rate), expectedRealValue).toFixed(
+                expectedRealValue
+              )
+            ).toLocaleString(undefined, {
+              maximumFractionDigits: expectedRealValue,
+            })}
+            &nbsp;
             {toToken.symbol}
           </span>
         </div>
@@ -67,10 +65,13 @@ export default function ExpectedCalculation({
         <div className="flex justify-between">
           <span className="text-gray-400">Expected Output:</span>
           <span className="text-white font-medium">
-            {tempAmount}&nbsp;
-            {/* {amountOut.toLocaleString(undefined, {
-              maximumFractionDigits: 6,
-            })}{" "} */}
+            {/* {tempAmount}&nbsp; */}
+            {parseFloat(
+              truncateToDecimals(Number(amountOut), decimal).toFixed(decimal)
+            ).toLocaleString(undefined, {
+              maximumFractionDigits: decimal,
+            })}
+            &nbsp;
             {toToken.symbol}
           </span>
         </div>

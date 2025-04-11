@@ -3,11 +3,13 @@
 import { motion } from "framer-motion";
 import TokenSelector from "./token-selector";
 import { Token } from "./swap-interface";
-import { formatEUR, formatIDR, formatUSD } from "@/util/helper";
+import { truncateToDecimals } from "@/util/helper";
 
 interface InputTokenProps {
   direction: "from" | "to";
+  decimal: number;
   selectedToken: Token;
+
   otherTokenId: string;
   tokens: Token[];
   amountIn: string;
@@ -17,23 +19,15 @@ interface InputTokenProps {
 
 export default function InputToken({
   direction,
+  decimal,
   selectedToken,
+
   otherTokenId,
   tokens,
   amountIn,
   setFromToken,
   handleAmountChange,
 }: InputTokenProps) {
-  let tempAmountOut: string = ""; // Changed from number to string
-  if (selectedToken.symbol === "IDRX") {
-    tempAmountOut = formatIDR(amountIn);
-  }
-  if (selectedToken.symbol === "USDC") {
-    tempAmountOut = formatUSD(amountIn);
-  }
-  if (selectedToken.symbol === "EURC") {
-    tempAmountOut = formatEUR(amountIn);
-  }
   return (
     <div className="space-y-2">
       <div className="flex justify-between">
@@ -61,12 +55,15 @@ export default function InputToken({
         ) : (
           <div className="flex-1 bg-gray-800 rounded-xl p-3 text-white text-xl transition-all duration-300 hover:bg-gray-750">
             <motion.span
-              // key={convertedAmount.toString()}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              {tempAmountOut}
+              {parseFloat(
+                truncateToDecimals(Number(amountIn), decimal).toFixed(decimal)
+              ).toLocaleString(undefined, {
+                maximumFractionDigits: decimal,
+              })}
             </motion.span>
           </div>
         )}

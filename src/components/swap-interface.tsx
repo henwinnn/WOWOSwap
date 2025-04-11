@@ -123,7 +123,11 @@ export default function SwapInterface() {
         args: [stableSwapContract.address, inputAmount + BigInt(1)],
       });
     } else {
-      console.log("Already approved, no need to approve again");
+      console.log(
+        "Already approved, no need to approve again",
+        allowance,
+        inputAmount
+      );
     }
   };
 
@@ -170,7 +174,7 @@ export default function SwapInterface() {
     if (amountIn && !isNaN(Number(amountIn))) {
       try {
         const inputBigInt = BigInt(Math.floor(Number(amountIn) * 1e18));
-        const setDefaultRate = BigInt(Math.floor(Number(1) * 1e18));
+        const defaultAmount = BigInt(1e18); // Use 1 token as default amount
         let output;
         let defaultRate;
         if (fromToken?.index !== undefined && toToken?.index !== undefined) {
@@ -185,7 +189,7 @@ export default function SwapInterface() {
           defaultRate = calculateSwapOutput(
             fromToken?.index,
             toToken?.index,
-            setDefaultRate,
+            defaultAmount,
             balances,
             multipliers
           );
@@ -235,6 +239,26 @@ export default function SwapInterface() {
     setIsSlippageOpen(false);
   };
 
+  const decimal = () => {
+    // If FROM token is IDRX, use 6 decimals
+    if (fromToken.symbol === "IDRX") {
+      return 6;
+    }
+    // If TO token is IDRX, use 2 decimals
+    if (toToken.symbol === "IDRX") {
+      return 2;
+    }
+    // If both tokens are USDC or EURC, use 2 decimals
+    if (
+      (fromToken.symbol === "USDC" || fromToken.symbol === "EURC") &&
+      (toToken.symbol === "USDC" || toToken.symbol === "EURC")
+    ) {
+      return 2;
+    }
+    // Default case
+    return 6;
+  };
+
   return (
     <div className="w-full max-w-md mt-24">
       {/* Logo and title */}
@@ -272,6 +296,7 @@ export default function SwapInterface() {
               {/* From token */}
               <InputToken
                 direction="from"
+                decimal={decimal()}
                 selectedToken={fromToken}
                 otherTokenId={toToken.id}
                 tokens={tokens}
@@ -286,6 +311,7 @@ export default function SwapInterface() {
               {/* To token */}
               <InputToken
                 direction="to"
+                decimal={decimal()}
                 selectedToken={toToken}
                 otherTokenId={fromToken.id}
                 tokens={tokens}
@@ -306,6 +332,7 @@ export default function SwapInterface() {
                   convertedAmount={convertedAmount}
                   swapFee={swapFee}
                   amountOut={amountOut}
+                  decimal={decimal()}
                 />
               )}
 

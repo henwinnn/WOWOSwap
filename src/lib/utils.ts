@@ -134,7 +134,7 @@ export function calculateSwapOutput(
   balances: bigint[],
   multipliers: bigint[],
   n: number = 3,
-  a: bigint = BigInt(1000 * n ** (n - 1)),
+  a: bigint = BigInt(1000) * BigInt(n) ** BigInt(n - 1),
   swapFee: bigint = BigInt(300) // 0.03%
 ): bigint {
   // Get precision-adjusted balances
