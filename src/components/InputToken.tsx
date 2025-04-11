@@ -9,7 +9,7 @@ interface InputTokenProps {
   selectedToken: Token;
   otherTokenId: string;
   tokens: Token[];
-  amount: string;
+  amountIn: string;
   setFromToken: (token: Token) => void;
   handleAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -19,7 +19,7 @@ export default function InputToken({
   selectedToken,
   otherTokenId,
   tokens,
-  amount,
+  amountIn,
   setFromToken,
   handleAmountChange,
 }: InputTokenProps) {
@@ -42,7 +42,7 @@ export default function InputToken({
         {direction == "from" ? (
           <input
             type="number"
-            value={amount}
+            value={amountIn}
             onChange={handleAmountChange}
             className="flex-1 bg-gray-800 border-0 rounded-xl p-3 text-white text-xl focus:ring-2 focus:ring-white/20 focus:outline-none transition-all duration-300 hover:bg-gray-750 focus:bg-gray-750"
             placeholder="0.00"
@@ -55,7 +55,7 @@ export default function InputToken({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              0
+              {amountIn}
             </motion.span>
           </div>
         )}

@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 // import TokenSelector from "./token-selector";
 // import ConversionRateDisplay from "./conversion-rate-display";
 import { useAccount } from "wagmi";
-import { TokensMapping } from "../custom-hooks/readContracts";
+import { TokensMapping, usePoolBalances } from "../custom-hooks/readContracts";
 import ConversionRateDisplay from "./conversion-rate-display";
 import Title from "./Title";
 import CardHeaderSlippage from "./CardHeaderSlippage";
@@ -18,10 +18,13 @@ import SlippageInfo from "./SlippageInfo";
 import ExpectedCalculation from "./ExpectedCalculation";
 import SwapButton from "./SwapButton";
 import Footer from "./Footer";
+import { calculateSwapOutput, getMinDy } from "@/lib/utils";
+import { useWriteContractSwap } from "@/custom-hooks/writeContracts";
 
 // Token types and initial data
 export type Token = {
   id: string;
+  index: number;
   name: string;
   symbol: string;
   color: string;
@@ -46,7 +49,8 @@ const getExchangeRate = (from: string, to: string): number => {
 
 export default function SwapInterface() {
   const { address } = useAccount();
-  const mappedTokens = TokensMapping(address || "");
+  const { swap } = useWriteContractSwap();
+  const mappedTokens = TokensMapping(address);
   const tokens = mappedTokens.map((token) => ({
     ...token,
     balance: Number(token.balance),
@@ -54,7 +58,8 @@ export default function SwapInterface() {
 
   const [fromToken, setFromToken] = useState(tokens[0]);
   const [toToken, setToToken] = useState(tokens[1]);
-  const [amount, setAmount] = useState("");
+  const [amountIn, setAmountIn] = useState("");
+  const [amountOut, setAmountOut] = useState("");
   const [rate, setRate] = useState(0);
   const [convertedAmount, setConvertedAmount] = useState(0);
   const [isSwapping, setIsSwapping] = useState(false);
@@ -62,8 +67,8 @@ export default function SwapInterface() {
   const [slippageTolerance, setSlippageTolerance] = useState<number>(0.5);
   const [isSlippageOpen, setIsSlippageOpen] = useState<boolean>(false);
   const [swapFee, setSwapFee] = useState(0.3);
-  const mappingToken = TokensMapping(address || "");
-  console.log({ mappingToken });
+  const balances = usePoolBalances();
+  const multipliers = [1, 16500, 17944].map(BigInt);
   // useEffect(() => {
   //   if (error) {
   //     console.error("Error fetching balances:", error);
@@ -86,7 +91,7 @@ export default function SwapInterface() {
       setRate(newRate);
       setSwapFee(0.3);
 
-      setConvertedAmount(Number(amount) * newRate);
+      setConvertedAmount(Number(amountIn) * newRate);
 
       setRateHistory((prev) => [...prev.slice(-9), newRate]);
     };
@@ -94,7 +99,30 @@ export default function SwapInterface() {
     updateRate();
     const interval = setInterval(updateRate, 3000);
     return () => clearInterval(interval);
-  }, [fromToken.id, toToken.id, amount]);
+  }, [fromToken.id, fromToken.index, toToken.id, toToken.index, amountIn]);
+
+  useEffect(() => {
+    if (amountIn && !isNaN(Number(amountIn))) {
+      try {
+        const inputBigInt = BigInt(Math.floor(Number(amountIn) * 1e18));
+        let output;
+        if (fromToken?.index !== undefined && toToken?.index !== undefined) {
+          output = calculateSwapOutput(
+            fromToken?.index,
+            toToken?.index,
+            inputBigInt,
+            balances,
+            multipliers
+          );
+        }
+        setAmountOut((Number(output) / 1e18).toFixed(6));
+      } catch (err) {
+        console.error("error calculating swap", err);
+      }
+    } else {
+      setAmountOut("0");
+    }
+  }, [amountIn, fromToken, toToken]);
 
   const handleSwap = () => {
     setIsSwapping(true);
@@ -105,17 +133,27 @@ export default function SwapInterface() {
     }, 300);
   };
 
+  const handleSwapTransaction = () => {
+    if (!fromToken || !toToken || !amountIn) return;
+    const inputBigInt = BigInt(Math.floor(Number(amountIn) * 1e18));
+    const outputBigInt = BigInt(Math.floor(Number(amountOut) * 1e18));
+    const minDy = getMinDy(outputBigInt, slippageTolerance);
+    console.log({ amountOut, minDy });
+    swap(fromToken.index, toToken.index, inputBigInt, minDy);
+  };
+
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Only allow numbers and a single decimal point
     if (value === "" || /^(\d*\.?\d{0,6})$/.test(value)) {
-      setAmount(value);
+      setAmountIn(value);
       // setConvertedAmount(Number.parseFloat(value || "0") * rate);
     }
   };
 
   const handleSlippageChange = (value: number) => {
     setSlippageTolerance(value);
+    setIsSlippageOpen(false);
   };
 
   return (
@@ -158,7 +196,7 @@ export default function SwapInterface() {
                 selectedToken={fromToken}
                 otherTokenId={toToken.id}
                 tokens={tokens}
-                amount={amount}
+                amountIn={amountIn}
                 setFromToken={setFromToken}
                 handleAmountChange={handleAmountChange}
               />
@@ -172,7 +210,7 @@ export default function SwapInterface() {
                 selectedToken={toToken}
                 otherTokenId={fromToken.id}
                 tokens={tokens}
-                amount=""
+                amountIn={amountOut}
                 setFromToken={setFromToken}
                 handleAmountChange={handleAmountChange}
               />
@@ -181,7 +219,7 @@ export default function SwapInterface() {
               <SlippageInfo slippageTolerance={slippageTolerance} />
 
               {/* Expected Calculation */}
-              {amount && fromToken.id !== toToken.id && (
+              {amountIn && fromToken.id !== toToken.id && (
                 <ExpectedCalculation
                   fromToken={fromToken}
                   toToken={toToken}
@@ -195,8 +233,9 @@ export default function SwapInterface() {
               <SwapButton
                 fromToken={fromToken}
                 toToken={toToken}
-                amount={amount}
+                amount={amountIn}
                 address={address}
+                handleSwapTransaction={handleSwapTransaction}
               />
             </div>
           </CardContent>
