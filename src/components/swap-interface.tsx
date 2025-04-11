@@ -139,6 +139,7 @@ export default function SwapInterface() {
     const outputBigInt = BigInt(Math.floor(Number(amountOut) * 1e18));
     const minDy = getMinDy(outputBigInt, slippageTolerance);
     console.log({ amountOut, minDy });
+
     swap(fromToken.index, toToken.index, inputBigInt, minDy);
   };
 
@@ -210,8 +211,8 @@ export default function SwapInterface() {
                 selectedToken={toToken}
                 otherTokenId={fromToken.id}
                 tokens={tokens}
-                amountIn={amountOut}
-                setFromToken={setFromToken}
+                amountIn={Number(amountOut).toFixed(2)}
+                setFromToken={setToToken}
                 handleAmountChange={handleAmountChange}
               />
 
