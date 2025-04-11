@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import TokenSelector from "./token-selector";
 import { Token } from "./swap-interface";
+import { formatEUR, formatIDR, formatUSD } from "@/util/helper";
 
 interface InputTokenProps {
   direction: "from" | "to";
@@ -23,6 +24,16 @@ export default function InputToken({
   setFromToken,
   handleAmountChange,
 }: InputTokenProps) {
+  let tempAmountOut: string = ""; // Changed from number to string
+  if (selectedToken.symbol === "IDRX") {
+    tempAmountOut = formatIDR(amountIn);
+  }
+  if (selectedToken.symbol === "USDC") {
+    tempAmountOut = formatUSD(amountIn);
+  }
+  if (selectedToken.symbol === "EURC") {
+    tempAmountOut = formatEUR(amountIn);
+  }
   return (
     <div className="space-y-2">
       <div className="flex justify-between">
@@ -55,7 +66,7 @@ export default function InputToken({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              {amountIn}
+              {tempAmountOut}
             </motion.span>
           </div>
         )}

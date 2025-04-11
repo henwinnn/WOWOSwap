@@ -32,20 +32,20 @@ export type Token = {
 };
 
 // Exchange rate simulation
-const getExchangeRate = (from: string, to: string): number => {
-  const exchangeRates: Record<string, number> = {
-    "IDRX-USDC": 0.0000606, // 1 IDRX = 0.0000606 USDC (1/16500)
-    "IDRX-EURC": 0.0000557, // 1 IDRX = 0.0000557 EURC (1/17944)
-    "USDC-IDRX": 16500, // 1 USDC = 16500 IDRX
-    "USDC-EURC": 1.09, // 1 USDC = 1.09 EURC
-    "EURC-IDRX": 17944, // 1 EURC = 17944 IDRX
-    "EURC-USDC": 0.92, // 1 EURC = 0.92 USDC
-  };
+// const getExchangeRate = (from: string, to: string): number => {
+//   const exchangeRates: Record<string, number> = {
+//     "IDRX-USDC": 0.0000606, // 1 IDRX = 0.0000606 USDC (1/16500)
+//     "IDRX-EURC": 0.0000557, // 1 IDRX = 0.0000557 EURC (1/17944)
+//     "USDC-IDRX": 16500, // 1 USDC = 16500 IDRX
+//     "USDC-EURC": 1.09, // 1 USDC = 1.09 EURC
+//     "EURC-IDRX": 17944, // 1 EURC = 17944 IDRX
+//     "EURC-USDC": 0.92, // 1 EURC = 0.92 USDC
+//   };
 
-  if (from === to) return 1;
-  const key = `${from.toUpperCase()}-${to.toUpperCase()}`;
-  return exchangeRates[key] || 1;
-};
+//   if (from === to) return 1;
+//   const key = `${from.toUpperCase()}-${to.toUpperCase()}`;
+//   return exchangeRates[key] || 1;
+// };
 
 export default function SwapInterface() {
   const { address } = useAccount();
@@ -60,7 +60,7 @@ export default function SwapInterface() {
   const [toToken, setToToken] = useState(tokens[1]);
   const [amountIn, setAmountIn] = useState("");
   const [amountOut, setAmountOut] = useState("");
-  const [rate, setRate] = useState(0);
+  const [rate, setRate] = useState("0");
   const [convertedAmount, setConvertedAmount] = useState(0);
   const [isSwapping, setIsSwapping] = useState(false);
   const [rateHistory, setRateHistory] = useState<number[]>([]);
@@ -87,25 +87,34 @@ export default function SwapInterface() {
   // Simulate real-time rate updates
   useEffect(() => {
     const updateRate = () => {
-      const newRate = getExchangeRate(fromToken.id, toToken.id);
-      setRate(newRate);
+      const newRate = rate;
+      // setRate(newRate);
       setSwapFee(0.3);
 
-      setConvertedAmount(Number(amountIn) * newRate);
+      setConvertedAmount(Number(amountIn) * Number(newRate));
 
-      setRateHistory((prev) => [...prev.slice(-9), newRate]);
+      setRateHistory((prev) => [...prev.slice(-9), Number(newRate)]);
     };
 
     updateRate();
     const interval = setInterval(updateRate, 3000);
     return () => clearInterval(interval);
-  }, [fromToken.id, fromToken.index, toToken.id, toToken.index, amountIn]);
+  }, [
+    fromToken.id,
+    rate,
+    fromToken.index,
+    toToken.id,
+    toToken.index,
+    amountIn,
+  ]);
 
   useEffect(() => {
     if (amountIn && !isNaN(Number(amountIn))) {
       try {
         const inputBigInt = BigInt(Math.floor(Number(amountIn) * 1e18));
+        const setDefaultRate = BigInt(Math.floor(Number(1) * 1e18));
         let output;
+        let defaultRate;
         if (fromToken?.index !== undefined && toToken?.index !== undefined) {
           output = calculateSwapOutput(
             fromToken?.index,
@@ -114,7 +123,17 @@ export default function SwapInterface() {
             balances,
             multipliers
           );
+
+          defaultRate = calculateSwapOutput(
+            fromToken?.index,
+            toToken?.index,
+            setDefaultRate,
+            balances,
+            multipliers
+          );
         }
+        console.log("default", defaultRate);
+        setRate((Number(defaultRate) / 1e18).toFixed(6));
         setAmountOut((Number(output) / 1e18).toFixed(6));
       } catch (err) {
         console.error("error calculating swap", err);
@@ -122,10 +141,13 @@ export default function SwapInterface() {
     } else {
       setAmountOut("0");
     }
-  }, [amountIn, fromToken, toToken]);
+  }, [amountIn, fromToken, toToken, rate, balances, multipliers]);
 
   const handleSwap = () => {
     setIsSwapping(true);
+    setConvertedAmount(0);
+    setAmountIn("");
+    setAmountOut("0");
     setTimeout(() => {
       setFromToken(toToken);
       setToToken(fromToken);
@@ -211,7 +233,7 @@ export default function SwapInterface() {
                 selectedToken={toToken}
                 otherTokenId={fromToken.id}
                 tokens={tokens}
-                amountIn={Number(amountOut).toFixed(2)}
+                amountIn={amountOut}
                 setFromToken={setToToken}
                 handleAmountChange={handleAmountChange}
               />
@@ -227,6 +249,7 @@ export default function SwapInterface() {
                   rate={rate}
                   convertedAmount={convertedAmount}
                   swapFee={swapFee}
+                  amountOut={amountOut}
                 />
               )}
 
