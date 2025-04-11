@@ -19,3 +19,16 @@ export const useWriteContractSwap = () => {
   };
   return { swap };
 };
+// export const useWriteContractApprove = () => {
+//   const { writeContract } = useWriteContract();
+
+//   const approve = (inputAmount: bigint) => {
+//     return writeContract({
+//       address: stableSwapContract.address,
+//       abi: stableSwapContract.abi,
+//       functionName: "swap",
+//       args: [stableSwapContract.address, inputAmount],
+//     });
+//   };
+//   return { approve };
+// };

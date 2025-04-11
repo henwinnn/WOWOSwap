@@ -1,8 +1,8 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 function abs(x: bigint, y: bigint): bigint {
@@ -161,6 +161,5 @@ export function calculateSwapOutput(
 export function getMinDy(output: bigint, slippagePercent: number): bigint {
   const slippage = BigInt(Math.floor(slippagePercent * 100)); // e.g. 0.5% => 50
   const minDy = output - (output * slippage) / BigInt(10_000);
-  console.log({ slippagePercent, slippage, output });
   return minDy;
 }

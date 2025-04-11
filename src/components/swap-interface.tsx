@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 // import TokenSelector from "./token-selector";
 // import ConversionRateDisplay from "./conversion-rate-display";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { TokensMapping, usePoolBalances } from "../custom-hooks/readContracts";
 import ConversionRateDisplay from "./conversion-rate-display";
 import Title from "./Title";
@@ -19,7 +19,16 @@ import ExpectedCalculation from "./ExpectedCalculation";
 import SwapButton from "./SwapButton";
 import Footer from "./Footer";
 import { calculateSwapOutput, getMinDy } from "@/lib/utils";
-import { useWriteContractSwap } from "@/custom-hooks/writeContracts";
+import {
+  // useWriteContractApprove,
+  useWriteContractSwap,
+} from "@/custom-hooks/writeContracts";
+import {
+  EURCContract,
+  IDRXContract,
+  stableSwapContract,
+  USDCContract,
+} from "@/contracts/contracts";
 
 // Token types and initial data
 export type Token = {
@@ -50,6 +59,9 @@ export type Token = {
 export default function SwapInterface() {
   const { address } = useAccount();
   const { swap } = useWriteContractSwap();
+  const { writeContract } = useWriteContract();
+
+  // const { approve } = useWriteContractApprove();
   const mappedTokens = TokensMapping(address);
   const tokens = mappedTokens.map((token) => ({
     ...token,
@@ -69,6 +81,52 @@ export default function SwapInterface() {
   const [swapFee, setSwapFee] = useState(0.3);
   const balances = usePoolBalances();
   const multipliers = [1, 16500, 17944].map(BigInt);
+  const { data: allowanceIdr } = useReadContract({
+    address: IDRXContract.address, // ERC20 token address
+    abi: IDRXContract.abi,
+    functionName: "allowance",
+    args: [address, stableSwapContract.address],
+  });
+  const { data: allowanceUsd } = useReadContract({
+    address: USDCContract.address, // ERC20 token address
+    abi: USDCContract.abi,
+    functionName: "allowance",
+    args: [address, stableSwapContract.address],
+  });
+  const { data: allowanceEur } = useReadContract({
+    address: EURCContract.address, // ERC20 token address
+    abi: EURCContract.abi,
+    functionName: "allowance",
+    args: [address, stableSwapContract.address],
+  });
+
+  const approveIfNeeded = async () => {
+    const inputAmount = BigInt(Math.floor(Number(amountIn) * 1e18));
+    let allowance = BigInt(0);
+    let tokenContract = IDRXContract;
+    if (fromToken.id === "idrx") {
+      allowance = allowanceIdr as bigint;
+      tokenContract = IDRXContract;
+    } else if (fromToken.id === "usdc") {
+      allowance = allowanceUsd as bigint;
+      tokenContract = USDCContract;
+    } else if (fromToken.id === "eurc") {
+      allowance = allowanceEur as bigint;
+      tokenContract = EURCContract;
+    }
+    if (allowance < inputAmount) {
+      console.log("Approving token before swap...");
+      writeContract({
+        address: tokenContract.address,
+        abi: tokenContract.abi,
+        functionName: "approve",
+        args: [stableSwapContract.address, inputAmount + BigInt(1)],
+      });
+    } else {
+      console.log("Already approved, no need to approve again");
+    }
+  };
+
   // useEffect(() => {
   //   if (error) {
   //     console.error("Error fetching balances:", error);
@@ -132,7 +190,6 @@ export default function SwapInterface() {
             multipliers
           );
         }
-        console.log("default", defaultRate);
         setRate((Number(defaultRate) / 1e18).toFixed(6));
         setAmountOut((Number(output) / 1e18).toFixed(6));
       } catch (err) {
@@ -160,8 +217,7 @@ export default function SwapInterface() {
     const inputBigInt = BigInt(Math.floor(Number(amountIn) * 1e18));
     const outputBigInt = BigInt(Math.floor(Number(amountOut) * 1e18));
     const minDy = getMinDy(outputBigInt, slippageTolerance);
-    console.log({ amountOut, minDy });
-
+    approveIfNeeded();
     swap(fromToken.index, toToken.index, inputBigInt, minDy);
   };
 
