@@ -27,3 +27,8 @@ export const formatUSD = (value: string | number): string => {
     maximumFractionDigits: 2,
   }).format(number);
 };
+
+export const truncateToDecimals = (num: number, decimals: number) => {
+  const multiplier = Math.pow(10, decimals);
+  return Math.floor(num * multiplier) / multiplier;
+};
