@@ -3,7 +3,7 @@
 import { TokensMapping } from "@/custom-hooks/readContracts";
 
 interface CardHeaderProps {
-  address: string;
+  address: `0x${string}` | undefined;
 }
 
 export default function AvailableBalance({ address }: CardHeaderProps) {
