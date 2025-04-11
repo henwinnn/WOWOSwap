@@ -1,22 +1,36 @@
 "use client";
 
+import { formatEUR, formatIDR, formatUSD } from "@/util/helper";
 import { Token } from "./swap-interface";
 
 interface ExpectedCalculationProps {
   fromToken: Token;
   toToken: Token;
-  rate: number;
+  rate: string;
   convertedAmount: number;
   swapFee: number;
+  amountOut: string;
 }
 
 export default function ExpectedCalculation({
   fromToken,
   toToken,
   rate,
-  convertedAmount,
+  // convertedAmount,
   swapFee,
+  amountOut,
 }: ExpectedCalculationProps) {
+  let tempAmount: string = ""; // Changed from number to string
+  if (toToken.symbol === "IDRX") {
+    tempAmount = formatIDR(amountOut);
+  }
+  if (toToken.symbol === "USDC") {
+    tempAmount = formatUSD(amountOut);
+  }
+  if (toToken.symbol === "EURC") {
+    tempAmount = formatEUR(amountOut);
+  }
+
   return (
     <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
       <div className="flex items-center mb-2">
@@ -42,8 +56,8 @@ export default function ExpectedCalculation({
         <div className="flex justify-between">
           <span className="text-gray-400">Exchange Rate:</span>
           <span className="text-white font-medium">
-            1 {fromToken.symbol} ={" "}
-            {rate.toLocaleString(undefined, {
+            1 {fromToken.symbol} =
+            {parseFloat(rate).toLocaleString(undefined, {
               maximumFractionDigits: 6,
             })}{" "}
             {toToken.symbol}
@@ -53,9 +67,10 @@ export default function ExpectedCalculation({
         <div className="flex justify-between">
           <span className="text-gray-400">Expected Output:</span>
           <span className="text-white font-medium">
-            {convertedAmount.toLocaleString(undefined, {
+            {tempAmount}&nbsp;
+            {/* {amountOut.toLocaleString(undefined, {
               maximumFractionDigits: 6,
-            })}{" "}
+            })}{" "} */}
             {toToken.symbol}
           </span>
         </div>

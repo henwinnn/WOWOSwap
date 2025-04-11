@@ -9,14 +9,20 @@ import { cn } from "@/lib/utils"
 import type { Token } from "./swap-interface"
 
 interface TokenSelectorProps {
-  selectedToken: Token
-  tokens: Token[]
-  onSelect: (token: Token) => void
+  selectedToken: Token;
+  otherTokenId: string;
+  tokens: Token[];
+  onSelect: (token: Token) => void;
 }
 
-export default function TokenSelector({ selectedToken, tokens, onSelect }: TokenSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
+export default function TokenSelector({
+  selectedToken,
+  otherTokenId,
+  tokens,
+  onSelect,
+}: TokenSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -27,13 +33,19 @@ export default function TokenSelector({ selectedToken, tokens, onSelect }: Token
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <motion.div className="flex items-center" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <motion.div
+            className="flex items-center"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
             <div className="flex items-center">
               <div
                 className="w-6 h-6 rounded-full mr-2 flex items-center justify-center"
                 style={{ backgroundColor: selectedToken.color }}
               >
-                <span className="text-xs font-bold text-white">{selectedToken.symbol.charAt(0)}</span>
+                <span className="text-xs font-bold text-white">
+                  {selectedToken.symbol.charAt(0)}
+                </span>
               </div>
               <span className="font-medium mr-1">{selectedToken.symbol}</span>
             </div>
@@ -57,13 +69,16 @@ export default function TokenSelector({ selectedToken, tokens, onSelect }: Token
           {tokens.map((token) => (
             <DropdownMenuItem
               key={token.id}
+              disabled={token.id == otherTokenId}
               className={cn(
                 "flex items-center py-2 px-3 cursor-pointer hover:bg-gray-700 transition-all duration-200",
-                selectedToken.id === token.id && "bg-gray-700",
+                selectedToken.id === token.id && "bg-gray-700"
               )}
               onClick={() => {
-                onSelect(token)
-                setIsOpen(false)
+                if (token.id !== otherTokenId) {
+                  onSelect(token);
+                  setIsOpen(false);
+                }
               }}
             >
               <motion.div
@@ -78,19 +93,23 @@ export default function TokenSelector({ selectedToken, tokens, onSelect }: Token
                   className="w-6 h-6 rounded-full mr-2 flex items-center justify-center"
                   style={{ backgroundColor: token.color }}
                 >
-                  <span className="text-xs font-bold text-white">{token.symbol.charAt(0)}</span>
+                  <span className="text-xs font-bold text-white">
+                    {token.symbol.charAt(0)}
+                  </span>
                 </div>
                 <div className="flex flex-col">
                   <span className="font-medium">{token.symbol}</span>
                   <span className="text-xs text-gray-400">{token.name}</span>
                 </div>
-                {selectedToken.id === token.id && <Check className="ml-auto h-4 w-4 text-white" />}
+                {selectedToken.id === token.id && (
+                  <Check className="ml-auto h-4 w-4 text-white" />
+                )}
               </motion.div>
             </DropdownMenuItem>
           ))}
         </AnimatePresence>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }
 

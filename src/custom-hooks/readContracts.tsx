@@ -1,13 +1,14 @@
-import { useReadContracts } from "wagmi";
+import { useReadContract, useReadContracts } from "wagmi";
 import {
   IDRXContract,
   USDCContract,
   EURCContract,
+  stableSwapContract,
 } from "../contracts/contracts";
 import { formatEther } from "viem";
 import { formatEUR, formatIDR, formatUSD } from "@/util/helper";
 
-export const useFetchBalances = (userAddress: string) => {
+export const useFetchBalances = (userAddress: `0x${string}` | undefined) => {
   const { data, error, isLoading } = useReadContracts({
     contracts: [
       {
@@ -46,18 +47,20 @@ export const useFetchBalances = (userAddress: string) => {
 
 interface Token {
   id: string;
+  index: number;
   name: string;
   symbol: string;
   color: string;
   balance: string;
 }
 
-export function TokensMapping(address: string): Token[] {
-  const { balances } = useFetchBalances(address || "");
+export function TokensMapping(address: `0x${string}` | undefined): Token[] {
+  const { balances } = useFetchBalances(address);
 
   const tokens: Token[] = [
     {
       id: "idrx",
+      index: 0,
       name: "Indonesian Rupiah",
       symbol: "IDRX",
       color: "#FF0000",
@@ -68,6 +71,7 @@ export function TokensMapping(address: string): Token[] {
     },
     {
       id: "usdc",
+      index: 1,
       name: "USD Coin",
       symbol: "USDC",
       color: "#2775CA",
@@ -78,6 +82,7 @@ export function TokensMapping(address: string): Token[] {
     },
     {
       id: "eurc",
+      index: 2,
       name: "Euro Coin",
       symbol: "EURC",
       color: "#0052B4",
@@ -90,3 +95,26 @@ export function TokensMapping(address: string): Token[] {
 
   return tokens;
 }
+
+export const usePoolBalances = () => {
+  const { data: balanceIDR } = useReadContract({
+    address: stableSwapContract.address,
+    abi: stableSwapContract.abi,
+    functionName: "balances",
+    args: [0],
+  }) as { data: bigint };
+  const { data: balanceUSD } = useReadContract({
+    address: stableSwapContract.address,
+    abi: stableSwapContract.abi,
+    functionName: "balances",
+    args: [1],
+  }) as { data: bigint };
+  const { data: balanceEUR } = useReadContract({
+    address: stableSwapContract.address,
+    abi: stableSwapContract.abi,
+    functionName: "balances",
+    args: [2],
+  }) as { data: bigint };
+  const balances: bigint[] = [balanceIDR, balanceUSD, balanceEUR];
+  return balances;
+};

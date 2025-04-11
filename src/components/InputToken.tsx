@@ -3,43 +3,57 @@
 import { motion } from "framer-motion";
 import TokenSelector from "./token-selector";
 import { Token } from "./swap-interface";
+import { formatEUR, formatIDR, formatUSD } from "@/util/helper";
 
 interface InputTokenProps {
   direction: "from" | "to";
-  fromToken: Token;
+  selectedToken: Token;
+  otherTokenId: string;
   tokens: Token[];
-  amount: string;
+  amountIn: string;
   setFromToken: (token: Token) => void;
   handleAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export default function InputToken({
   direction,
-  fromToken,
+  selectedToken,
+  otherTokenId,
   tokens,
-  amount,
+  amountIn,
   setFromToken,
   handleAmountChange,
 }: InputTokenProps) {
+  let tempAmountOut: string = ""; // Changed from number to string
+  if (selectedToken.symbol === "IDRX") {
+    tempAmountOut = formatIDR(amountIn);
+  }
+  if (selectedToken.symbol === "USDC") {
+    tempAmountOut = formatUSD(amountIn);
+  }
+  if (selectedToken.symbol === "EURC") {
+    tempAmountOut = formatEUR(amountIn);
+  }
   return (
     <div className="space-y-2">
       <div className="flex justify-between">
         <label className="text-sm text-gray-400">{direction}</label>
         <span className="text-sm text-gray-400">
-          {/* Balance: {fromToken.balance.toLocaleString()}{" "}
-                        {fromToken.symbol} */}
+          {/* Balance: {selectedToken.balance.toLocaleString()}{" "}
+                        {selectedToken.symbol} */}
         </span>
       </div>
       <div className="flex items-center space-x-3">
         <TokenSelector
-          selectedToken={fromToken}
+          selectedToken={selectedToken}
+          otherTokenId={otherTokenId}
           tokens={tokens}
           onSelect={setFromToken}
         />
         {direction == "from" ? (
           <input
             type="number"
-            value={amount}
+            value={amountIn}
             onChange={handleAmountChange}
             className="flex-1 bg-gray-800 border-0 rounded-xl p-3 text-white text-xl focus:ring-2 focus:ring-white/20 focus:outline-none transition-all duration-300 hover:bg-gray-750 focus:bg-gray-750"
             placeholder="0.00"
@@ -52,7 +66,7 @@ export default function InputToken({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              0
+              {tempAmountOut}
             </motion.span>
           </div>
         )}

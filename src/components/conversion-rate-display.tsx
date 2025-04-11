@@ -1,82 +1,88 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { TrendingDown, TrendingUp } from "lucide-react"
-import type { Token } from "./swap-interface"
+import { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { TrendingDown, TrendingUp } from "lucide-react";
+import type { Token } from "./swap-interface";
 
 interface ConversionRateDisplayProps {
-  fromToken: Token
-  toToken: Token
-  rate: number
-  rateHistory: number[]
+  fromToken: Token;
+  toToken: Token;
+  rate: string;
+  rateHistory: number[];
 }
 
-export default function ConversionRateDisplay({ fromToken, toToken, rate, rateHistory }: ConversionRateDisplayProps) {
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [prevRate, setPrevRate] = useState(rate)
-  const [trend, setTrend] = useState<"up" | "down" | null>(null)
-  const [isHovered, setIsHovered] = useState(false)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+export default function ConversionRateDisplay({
+  fromToken,
+  toToken,
+  rate,
+  rateHistory,
+}: ConversionRateDisplayProps) {
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [prevRate, setPrevRate] = useState(rate);
+  const [trend, setTrend] = useState<"up" | "down" | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Draw mini chart
   useEffect(() => {
     if (canvasRef.current && rateHistory.length > 1) {
-      const canvas = canvasRef.current
-      const ctx = canvas.getContext("2d")
-      if (!ctx) return
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
 
-      const width = canvas.width
-      const height = canvas.height
+      const width = canvas.width;
+      const height = canvas.height;
 
       // Clear canvas
-      ctx.clearRect(0, 0, width, height)
+      ctx.clearRect(0, 0, width, height);
 
       // Calculate min and max for scaling
-      const min = Math.min(...rateHistory) * 0.99
-      const max = Math.max(...rateHistory) * 1.01
-      const range = max - min
+      const min = Math.min(...rateHistory) * 0.99;
+      const max = Math.max(...rateHistory) * 1.01;
+      const range = max - min;
 
       // Draw line
-      ctx.beginPath()
-      ctx.strokeStyle = trend === "up" ? "#10b981" : trend === "down" ? "#ef4444" : "#ffffff"
-      ctx.lineWidth = 2
+      ctx.beginPath();
+      ctx.strokeStyle =
+        trend === "up" ? "#10b981" : trend === "down" ? "#ef4444" : "#ffffff";
+      ctx.lineWidth = 2;
 
       rateHistory.forEach((value, index) => {
         if (index === 0 && rateHistory.length === 1) {
           // If only one point, draw a horizontal line
-          ctx.moveTo(0, height / 2)
-          ctx.lineTo(width, height / 2)
+          ctx.moveTo(0, height / 2);
+          ctx.lineTo(width, height / 2);
         } else if (index === 0) {
           // First point
-          const x = (index / (rateHistory.length - 1)) * width
-          const y = height - ((value - min) / range) * height
-          ctx.moveTo(x, y)
+          const x = (index / (rateHistory.length - 1)) * width;
+          const y = height - ((value - min) / range) * height;
+          ctx.moveTo(x, y);
         } else {
           // Subsequent points
-          const x = (index / (rateHistory.length - 1)) * width
-          const y = height - ((value - min) / range) * height
-          ctx.lineTo(x, y)
+          const x = (index / (rateHistory.length - 1)) * width;
+          const y = height - ((value - min) / range) * height;
+          ctx.lineTo(x, y);
         }
-      })
+      });
 
-      ctx.stroke()
+      ctx.stroke();
     }
-  }, [rateHistory, trend])
+  }, [rateHistory, trend]);
 
   useEffect(() => {
     if (prevRate !== rate) {
-      setIsUpdating(true)
-      setTrend(rate > prevRate ? "up" : "down")
-      setPrevRate(rate)
+      setIsUpdating(true);
+      setTrend(rate > prevRate ? "up" : "down");
+      setPrevRate(rate);
 
       const timer = setTimeout(() => {
-        setIsUpdating(false)
-      }, 1000)
+        setIsUpdating(false);
+      }, 1000);
 
-      return () => clearTimeout(timer)
+      return () => clearTimeout(timer);
     }
-  }, [rate, prevRate])
+  }, [rate, prevRate]);
 
   return (
     <motion.div
@@ -176,7 +182,7 @@ export default function ConversionRateDisplay({ fromToken, toToken, rate, rateHi
             }`}
             transition={{ duration: 0.3 }}
           >
-            {rate.toLocaleString(undefined, {
+            {parseFloat(rate).toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 6,
             })}
@@ -206,7 +212,9 @@ export default function ConversionRateDisplay({ fromToken, toToken, rate, rateHi
             animate={{ opacity: isHovered ? 1 : 0.7 }}
           >
             1 {fromToken.symbol} ={" "}
-            {rate.toLocaleString(undefined, { maximumFractionDigits: 6 })}{" "}
+            {parseFloat(rate).toLocaleString(undefined, {
+              maximumFractionDigits: 6,
+            })}{" "}
             {toToken.symbol}
           </motion.p>
         </div>
@@ -228,4 +236,3 @@ export default function ConversionRateDisplay({ fromToken, toToken, rate, rateHi
     </motion.div>
   );
 }
-

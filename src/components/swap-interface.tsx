@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 // import TokenSelector from "./token-selector";
 // import ConversionRateDisplay from "./conversion-rate-display";
 import { useAccount } from "wagmi";
-import { TokensMapping } from "../custom-hooks/readContracts";
+import { TokensMapping, usePoolBalances } from "../custom-hooks/readContracts";
 import ConversionRateDisplay from "./conversion-rate-display";
 import Title from "./Title";
 import CardHeaderSlippage from "./CardHeaderSlippage";
@@ -18,10 +18,13 @@ import SlippageInfo from "./SlippageInfo";
 import ExpectedCalculation from "./ExpectedCalculation";
 import SwapButton from "./SwapButton";
 import Footer from "./Footer";
+import { calculateSwapOutput, getMinDy } from "@/lib/utils";
+import { useWriteContractSwap } from "@/custom-hooks/writeContracts";
 
 // Token types and initial data
 export type Token = {
   id: string;
+  index: number;
   name: string;
   symbol: string;
   color: string;
@@ -29,24 +32,25 @@ export type Token = {
 };
 
 // Exchange rate simulation
-const getExchangeRate = (from: string, to: string): number => {
-  const exchangeRates: Record<string, number> = {
-    "IDRX-USDC": 0.0000606, // 1 IDRX = 0.0000606 USDC (1/16500)
-    "IDRX-EURC": 0.0000557, // 1 IDRX = 0.0000557 EURC (1/17944)
-    "USDC-IDRX": 16500, // 1 USDC = 16500 IDRX
-    "USDC-EURC": 1.09, // 1 USDC = 1.09 EURC
-    "EURC-IDRX": 17944, // 1 EURC = 17944 IDRX
-    "EURC-USDC": 0.92, // 1 EURC = 0.92 USDC
-  };
+// const getExchangeRate = (from: string, to: string): number => {
+//   const exchangeRates: Record<string, number> = {
+//     "IDRX-USDC": 0.0000606, // 1 IDRX = 0.0000606 USDC (1/16500)
+//     "IDRX-EURC": 0.0000557, // 1 IDRX = 0.0000557 EURC (1/17944)
+//     "USDC-IDRX": 16500, // 1 USDC = 16500 IDRX
+//     "USDC-EURC": 1.09, // 1 USDC = 1.09 EURC
+//     "EURC-IDRX": 17944, // 1 EURC = 17944 IDRX
+//     "EURC-USDC": 0.92, // 1 EURC = 0.92 USDC
+//   };
 
-  if (from === to) return 1;
-  const key = `${from.toUpperCase()}-${to.toUpperCase()}`;
-  return exchangeRates[key] || 1;
-};
+//   if (from === to) return 1;
+//   const key = `${from.toUpperCase()}-${to.toUpperCase()}`;
+//   return exchangeRates[key] || 1;
+// };
 
 export default function SwapInterface() {
   const { address } = useAccount();
-  const mappedTokens = TokensMapping(address || "");
+  const { swap } = useWriteContractSwap();
+  const mappedTokens = TokensMapping(address);
   const tokens = mappedTokens.map((token) => ({
     ...token,
     balance: Number(token.balance),
@@ -54,16 +58,17 @@ export default function SwapInterface() {
 
   const [fromToken, setFromToken] = useState(tokens[0]);
   const [toToken, setToToken] = useState(tokens[1]);
-  const [amount, setAmount] = useState("");
-  const [rate, setRate] = useState(0);
+  const [amountIn, setAmountIn] = useState("");
+  const [amountOut, setAmountOut] = useState("");
+  const [rate, setRate] = useState("0");
   const [convertedAmount, setConvertedAmount] = useState(0);
   const [isSwapping, setIsSwapping] = useState(false);
   const [rateHistory, setRateHistory] = useState<number[]>([]);
   const [slippageTolerance, setSlippageTolerance] = useState<number>(0.5);
   const [isSlippageOpen, setIsSlippageOpen] = useState<boolean>(false);
   const [swapFee, setSwapFee] = useState(0.3);
-  const mappingToken = TokensMapping(address || "");
-  console.log({ mappingToken });
+  const balances = usePoolBalances();
+  const multipliers = [1, 16500, 17944].map(BigInt);
   // useEffect(() => {
   //   if (error) {
   //     console.error("Error fetching balances:", error);
@@ -82,22 +87,67 @@ export default function SwapInterface() {
   // Simulate real-time rate updates
   useEffect(() => {
     const updateRate = () => {
-      const newRate = getExchangeRate(fromToken.id, toToken.id);
-      setRate(newRate);
+      const newRate = rate;
+      // setRate(newRate);
       setSwapFee(0.3);
 
-      setConvertedAmount(Number(amount) * newRate);
+      setConvertedAmount(Number(amountIn) * Number(newRate));
 
-      setRateHistory((prev) => [...prev.slice(-9), newRate]);
+      setRateHistory((prev) => [...prev.slice(-9), Number(newRate)]);
     };
 
     updateRate();
     const interval = setInterval(updateRate, 3000);
     return () => clearInterval(interval);
-  }, [fromToken.id, toToken.id, amount]);
+  }, [
+    fromToken.id,
+    rate,
+    fromToken.index,
+    toToken.id,
+    toToken.index,
+    amountIn,
+  ]);
+
+  useEffect(() => {
+    if (amountIn && !isNaN(Number(amountIn))) {
+      try {
+        const inputBigInt = BigInt(Math.floor(Number(amountIn) * 1e18));
+        const setDefaultRate = BigInt(Math.floor(Number(1) * 1e18));
+        let output;
+        let defaultRate;
+        if (fromToken?.index !== undefined && toToken?.index !== undefined) {
+          output = calculateSwapOutput(
+            fromToken?.index,
+            toToken?.index,
+            inputBigInt,
+            balances,
+            multipliers
+          );
+
+          defaultRate = calculateSwapOutput(
+            fromToken?.index,
+            toToken?.index,
+            setDefaultRate,
+            balances,
+            multipliers
+          );
+        }
+        console.log("default", defaultRate);
+        setRate((Number(defaultRate) / 1e18).toFixed(6));
+        setAmountOut((Number(output) / 1e18).toFixed(6));
+      } catch (err) {
+        console.error("error calculating swap", err);
+      }
+    } else {
+      setAmountOut("0");
+    }
+  }, [amountIn, fromToken, toToken, rate, balances, multipliers]);
 
   const handleSwap = () => {
     setIsSwapping(true);
+    setConvertedAmount(0);
+    setAmountIn("");
+    setAmountOut("0");
     setTimeout(() => {
       setFromToken(toToken);
       setToToken(fromToken);
@@ -105,17 +155,28 @@ export default function SwapInterface() {
     }, 300);
   };
 
+  const handleSwapTransaction = () => {
+    if (!fromToken || !toToken || !amountIn) return;
+    const inputBigInt = BigInt(Math.floor(Number(amountIn) * 1e18));
+    const outputBigInt = BigInt(Math.floor(Number(amountOut) * 1e18));
+    const minDy = getMinDy(outputBigInt, slippageTolerance);
+    console.log({ amountOut, minDy });
+
+    swap(fromToken.index, toToken.index, inputBigInt, minDy);
+  };
+
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Only allow numbers and a single decimal point
     if (value === "" || /^(\d*\.?\d{0,6})$/.test(value)) {
-      setAmount(value);
+      setAmountIn(value);
       // setConvertedAmount(Number.parseFloat(value || "0") * rate);
     }
   };
 
   const handleSlippageChange = (value: number) => {
     setSlippageTolerance(value);
+    setIsSlippageOpen(false);
   };
 
   return (
@@ -155,9 +216,10 @@ export default function SwapInterface() {
               {/* From token */}
               <InputToken
                 direction="from"
-                fromToken={fromToken}
+                selectedToken={fromToken}
+                otherTokenId={toToken.id}
                 tokens={tokens}
-                amount={amount}
+                amountIn={amountIn}
                 setFromToken={setFromToken}
                 handleAmountChange={handleAmountChange}
               />
@@ -168,10 +230,11 @@ export default function SwapInterface() {
               {/* To token */}
               <InputToken
                 direction="to"
-                fromToken={toToken}
+                selectedToken={toToken}
+                otherTokenId={fromToken.id}
                 tokens={tokens}
-                amount=""
-                setFromToken={setFromToken}
+                amountIn={amountOut}
+                setFromToken={setToToken}
                 handleAmountChange={handleAmountChange}
               />
 
@@ -179,13 +242,14 @@ export default function SwapInterface() {
               <SlippageInfo slippageTolerance={slippageTolerance} />
 
               {/* Expected Calculation */}
-              {amount && fromToken.id !== toToken.id && (
+              {amountIn && fromToken.id !== toToken.id && (
                 <ExpectedCalculation
                   fromToken={fromToken}
                   toToken={toToken}
                   rate={rate}
                   convertedAmount={convertedAmount}
                   swapFee={swapFee}
+                  amountOut={amountOut}
                 />
               )}
 
@@ -193,8 +257,9 @@ export default function SwapInterface() {
               <SwapButton
                 fromToken={fromToken}
                 toToken={toToken}
-                amount={amount}
+                amount={amountIn}
                 address={address}
+                handleSwapTransaction={handleSwapTransaction}
               />
             </div>
           </CardContent>
