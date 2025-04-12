@@ -28,7 +28,7 @@ export default function SwitchButton({
         animate={{ rotate: isSwapping ? 180 : 0 }}
         transition={{ duration: 0.3 }}
         onClick={handleSwap}
-        className="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-700 text-white shadow-lg"
+        className="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border border-gray-700 text-white shadow-lg cursor-pointer"
       >
         <ArrowDownUp className="w-5 h-5" />
       </motion.button>

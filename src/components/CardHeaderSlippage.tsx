@@ -29,7 +29,7 @@ export default function CardHeaderSlippage({
       <Popover open={isSlippageOpen} onOpenChange={setIsSlippageOpen}>
         <PopoverTrigger asChild>
           <motion.button
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-800 text-gray-400 hover:bg-gray-750 hover:text-white transition-all duration-200"
+            className="flex items-center justify-center cursor-pointer w-8 h-8 rounded-full bg-gray-800 text-gray-400 hover:bg-gray-750 hover:text-white transition-all duration-200"
             // whileHover={{ rotate: 90, scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             animate={{ rotate: isSlippageOpen ? 180 : 0 }}
@@ -53,7 +53,7 @@ export default function CardHeaderSlippage({
                   size="sm"
                   onClick={() => handleSlippageChange(value)}
                   className={cn(
-                    "rounded-full px-3 py-1 h-auto text-xs font-medium",
+                    "rounded-full px-3 py-1 h-auto text-xs font-medium cursor-pointer",
                     slippageTolerance === value
                       ? "bg-white text-black border-white"
                       : "bg-gray-750 text-gray-300 border-gray-700 hover:bg-gray-700"

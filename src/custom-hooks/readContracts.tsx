@@ -5,8 +5,8 @@ import {
   EURCContract,
   stableSwapContract,
 } from "../contracts/contracts";
-import { formatEther } from "viem";
-import { formatEUR, formatIDR, formatUSD } from "@/util/helper";
+// import { formatEther } from "viem";
+// import { formatEUR, formatIDR, formatUSD } from "@/util/helper";
 
 export const useFetchBalances = (userAddress: `0x${string}` | undefined) => {
   const { data, error, isLoading } = useReadContracts({
@@ -51,7 +51,7 @@ interface Token {
   name: string;
   symbol: string;
   color: string;
-  balance: string;
+  balance: bigint;
 }
 
 export function TokensMapping(address: `0x${string}` | undefined): Token[] {
@@ -66,8 +66,8 @@ export function TokensMapping(address: `0x${string}` | undefined): Token[] {
       color: "#FF0000",
       balance:
         balances[0]?.status === "success"
-          ? formatIDR(formatEther(balances[0].result as bigint))
-          : "0.0",
+          ? (balances[0].result as bigint)
+          : BigInt(0),
     },
     {
       id: "usdc",
@@ -77,8 +77,8 @@ export function TokensMapping(address: `0x${string}` | undefined): Token[] {
       color: "#2775CA",
       balance:
         balances[1]?.status === "success"
-          ? formatUSD(formatEther(balances[1].result as bigint))
-          : "0.0",
+          ? (balances[1].result as bigint)
+          : BigInt(0),
     },
     {
       id: "eurc",
@@ -88,8 +88,8 @@ export function TokensMapping(address: `0x${string}` | undefined): Token[] {
       color: "#0052B4",
       balance:
         balances[2]?.status === "success"
-          ? formatEUR(formatEther(balances[2].result as bigint))
-          : "0.0",
+          ? (balances[2].result as bigint)
+          : BigInt(0),
     },
   ];
 

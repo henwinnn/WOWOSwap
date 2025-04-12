@@ -37,7 +37,7 @@ export type Token = {
   name: string;
   symbol: string;
   color: string;
-  balance: number;
+  balance: bigint;
 };
 
 // Exchange rate simulation
@@ -63,13 +63,13 @@ export default function SwapInterface() {
 
   // const { approve } = useWriteContractApprove();
   const mappedTokens = TokensMapping(address);
-  const tokens = mappedTokens.map((token) => ({
-    ...token,
-    balance: Number(token.balance),
-  }));
+  // const tokens = mappedTokens.map((token) => ({
+  //   ...token,
+  //   balance: Number(token.balance),
+  // }));
 
-  const [fromToken, setFromToken] = useState(tokens[0]);
-  const [toToken, setToToken] = useState(tokens[1]);
+  const [fromToken, setFromToken] = useState(mappedTokens[0]);
+  const [toToken, setToToken] = useState(mappedTokens[1]);
   const [amountIn, setAmountIn] = useState("");
   const [amountOut, setAmountOut] = useState("");
   const [rate, setRate] = useState("0");
@@ -227,11 +227,7 @@ export default function SwapInterface() {
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Only allow numbers and a single decimal point
-    if (value === "" || /^(\d*\.?\d{0,6})$/.test(value)) {
-      setAmountIn(value);
-      // setConvertedAmount(Number.parseFloat(value || "0") * rate);
-    }
+    setAmountIn(value);
   };
 
   const handleSlippageChange = (value: number) => {
@@ -291,7 +287,15 @@ export default function SwapInterface() {
               />
 
               {/* Available Balance section */}
-              {address && <AvailableBalance address={address} />}
+              {address && handleSwap && (
+                <AvailableBalance
+                  mappingToken={mappedTokens}
+                  toToken={toToken}
+                  setAmountIn={setAmountIn}
+                  setFromToken={setFromToken}
+                  handleSwap={handleSwap}
+                />
+              )}
 
               {/* From token */}
               <InputToken
@@ -299,7 +303,7 @@ export default function SwapInterface() {
                 decimal={decimal()}
                 selectedToken={fromToken}
                 otherTokenId={toToken.id}
-                tokens={tokens}
+                tokens={mappedTokens}
                 amountIn={amountIn}
                 setFromToken={setFromToken}
                 handleAmountChange={handleAmountChange}
@@ -314,7 +318,7 @@ export default function SwapInterface() {
                 decimal={decimal()}
                 selectedToken={toToken}
                 otherTokenId={fromToken.id}
-                tokens={tokens}
+                tokens={mappedTokens}
                 amountIn={amountOut}
                 setFromToken={setToToken}
                 handleAmountChange={handleAmountChange}

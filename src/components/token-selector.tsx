@@ -29,7 +29,7 @@ export default function TokenSelector({
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600 text-white h-[52px] pl-3 pr-2 rounded-xl transition-all duration-300"
+          className="bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600 text-white h-[52px] pl-3 pr-2 rounded-xl transition-all duration-300 cursor-pointer"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
