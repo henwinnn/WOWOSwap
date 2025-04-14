@@ -11,11 +11,21 @@ interface SwapButtonProps {
   amount: string;
   address: `0x${string}` | undefined;
   hasEnoughBalance: boolean;
+  isConnected: boolean;
   handleSwapTransaction: () => void;
 }
 
-const getButtonTitle = (hasEnoughBalance: boolean): string => {
-  return hasEnoughBalance ? "Swap" : "Insufficient Funds";
+const getButtonTitle = (
+  hasEnoughBalance: boolean,
+  isConnected: boolean
+): string => {
+  if (!isConnected) {
+    return "Wallet Not Connected";
+  } else if (hasEnoughBalance) {
+    return "Swap";
+  } else {
+    return "Insufficient Funds";
+  }
 };
 
 export default function SwapButton({
@@ -24,7 +34,7 @@ export default function SwapButton({
   amount,
   address,
   hasEnoughBalance,
-
+  isConnected,
   handleSwapTransaction,
 }: SwapButtonProps) {
   return (
@@ -36,7 +46,8 @@ export default function SwapButton({
           !amount ||
           !address ||
           fromToken.id === toToken.id ||
-          !hasEnoughBalance
+          !hasEnoughBalance ||
+          !isConnected
         }
       >
         <motion.div
@@ -44,7 +55,7 @@ export default function SwapButton({
           whileHover={{ x: 5 }}
           transition={{ type: "spring", stiffness: 400 }}
         >
-          {getButtonTitle(hasEnoughBalance)}
+          {getButtonTitle(hasEnoughBalance, isConnected)}
           <ArrowRight className="ml-2 w-5 h-5" />
         </motion.div>
       </Button>

@@ -57,7 +57,7 @@ export type Token = {
 // };
 
 export default function SwapInterface() {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const { swap } = useWriteContractSwap();
   const { writeContract } = useWriteContract();
 
@@ -360,6 +360,7 @@ export default function SwapInterface() {
                 amount={amountIn}
                 address={address}
                 hasEnoughBalance={hasEnoughBalance}
+                isConnected={isConnected}
                 handleSwapTransaction={handleSwapTransaction}
               />
             </div>
