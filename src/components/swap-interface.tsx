@@ -63,11 +63,6 @@ export default function SwapInterface() {
 
   // const { approve } = useWriteContractApprove();
   const mappedTokens = TokensMapping(address);
-  // const tokens = mappedTokens.map((token) => ({
-  //   ...token,
-  //   balance: Number(token.balance),
-  // }));
-
   const [fromToken, setFromToken] = useState(mappedTokens[0]);
   const [toToken, setToToken] = useState(mappedTokens[1]);
   const [amountIn, setAmountIn] = useState("");
@@ -78,7 +73,7 @@ export default function SwapInterface() {
   const [rateHistory, setRateHistory] = useState<number[]>([]);
   const [slippageTolerance, setSlippageTolerance] = useState<number>(0.5);
   const [isSlippageOpen, setIsSlippageOpen] = useState<boolean>(false);
-  const [hasEnoughBalance, setHasEnoughBalance] = useState<boolean>(false);
+  const [hasEnoughBalance, setHasEnoughBalance] = useState<boolean>(true);
   const [swapFee, setSwapFee] = useState(0.3);
   const balances = usePoolBalances();
   const multipliers = [1, 16500, 17944].map(BigInt);
@@ -172,10 +167,13 @@ export default function SwapInterface() {
   ]);
 
   useEffect(() => {
+    if (amountIn == "") {
+      setHasEnoughBalance(true);
+    }
     if (amountIn && !isNaN(Number(amountIn))) {
       try {
         const inputBigInt = BigInt(Math.floor(Number(amountIn) * 1e18));
-        if (inputBigInt <= fromToken.balance) {
+        if (inputBigInt <= mappedTokens[fromToken.index].balance) {
           setHasEnoughBalance(true);
         } else {
           setHasEnoughBalance(false);

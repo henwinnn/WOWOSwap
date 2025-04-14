@@ -49,6 +49,13 @@ export default function InputToken({
             type="number"
             value={amountIn}
             onChange={handleAmountChange}
+            onKeyDown={(e) => {
+              if (["ArrowUp", "ArrowDown", "e", "-"].includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
+            onWheel={(e) => e.currentTarget.blur()} // disables scroll increment
+            min="0"
             className="flex-1 bg-gray-800 border-0 rounded-xl p-3 text-white text-xl focus:ring-2 focus:ring-white/20 focus:outline-none transition-all duration-300 hover:bg-gray-750 focus:bg-gray-750"
             placeholder="0.00"
           />
