@@ -100,16 +100,25 @@ export default function SwapInterface() {
     const inputAmount = BigInt(Math.floor(Number(amountIn) * 1e18));
     let allowance = BigInt(0);
     let tokenContract = IDRXContract;
-    if (fromToken.id === "idrx") {
-      allowance = allowanceIdr as bigint;
-      tokenContract = IDRXContract;
-    } else if (fromToken.id === "usdc") {
-      allowance = allowanceUsd as bigint;
-      tokenContract = USDCContract;
-    } else if (fromToken.id === "eurc") {
-      allowance = allowanceEur as bigint;
-      tokenContract = EURCContract;
+
+    switch (fromToken.id) {
+      case "idrx":
+        allowance = allowanceIdr as bigint;
+        tokenContract = IDRXContract;
+        break;
+      case "usdc":
+        allowance = allowanceUsd as bigint;
+        tokenContract = USDCContract;
+        break;
+      case "eurc":
+        allowance = allowanceEur as bigint;
+        tokenContract = EURCContract;
+        break;
+      default:
+        console.log("Invalid token's ID: ", fromToken.id);
+        break;
     }
+
     if (allowance < inputAmount) {
       console.log("Approving token before swap...");
       writeContract({
