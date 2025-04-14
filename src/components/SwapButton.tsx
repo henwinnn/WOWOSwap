@@ -14,6 +14,10 @@ interface SwapButtonProps {
   handleSwapTransaction: () => void;
 }
 
+const getButtonTitle = (hasEnoughBalance: boolean): string => {
+  return hasEnoughBalance ? "Swap" : "Insufficient Funds";
+};
+
 export default function SwapButton({
   fromToken,
   toToken,
@@ -40,7 +44,7 @@ export default function SwapButton({
           whileHover={{ x: 5 }}
           transition={{ type: "spring", stiffness: 400 }}
         >
-          {hasEnoughBalance ? "Swap" : "Insufficient Funds"}
+          {getButtonTitle(hasEnoughBalance)}
           <ArrowRight className="ml-2 w-5 h-5" />
         </motion.div>
       </Button>
