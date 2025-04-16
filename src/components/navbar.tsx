@@ -1,13 +1,15 @@
 "use client";
 
+import type React from "react";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
-  // const [isConnected, setIsConnected] = useState(false);
-  // const [account, setAccount] = useState("");
-  // const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Handle scroll effect for navbar
@@ -30,20 +32,55 @@ export default function Navbar() {
       transition={{ duration: 0.5 }}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Logo */}
-        <motion.div
-          className="flex items-center"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <span className="text-white font-bold text-xl tracking-tight">
-            WOWOSwap
-          </span>
-        </motion.div>
+        {/* Logo and Navigation */}
+        <div className="flex items-center space-x-8">
+          <Link href="/">
+            <motion.div
+              className="flex items-center"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span className="text-white font-bold text-xl tracking-tight">
+                WOWOSwap
+              </span>
+            </motion.div>
+          </Link>
+
+          <div className="hidden md:flex space-x-6">
+            <NavLink href="/" active={pathname === "/"}>
+              Swap
+            </NavLink>
+            <NavLink href="/pool" active={pathname.startsWith("/pool")}>
+              Pools
+            </NavLink>
+          </div>
+        </div>
 
         {/* Connect Wallet Button */}
         <ConnectButton />
       </div>
     </motion.nav>
+  );
+}
+
+function NavLink({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link href={href}>
+      <span
+        className={`text-sm font-medium cursor-pointer transition-colors ${
+          active ? "text-white" : "text-gray-400 hover:text-white"
+        }`}
+      >
+        {children}
+      </span>
+    </Link>
   );
 }
