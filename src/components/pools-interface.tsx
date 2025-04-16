@@ -128,7 +128,7 @@ export default function PoolsInterface() {
                 />
               </div>
               <Button
-                className="ml-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-4 py-2 flex items-center"
+                className="ml-4 bg-gray-200 hover:bg-white text-black rounded-xl px-4 py-2 flex items-center"
                 onClick={() => router.push("/pool/create")}
               >
                 <Plus className="w-4 h-4 mr-2" />

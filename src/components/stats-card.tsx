@@ -40,8 +40,8 @@ export default function StatsCard({
                 <button
                   className={`px-2 py-1 ${
                     timeFrame === "24h"
-                      ? "bg-purple-600 text-white"
-                      : "text-gray-400"
+                      ? "bg-white text-black"
+                      : "bg-gray-400 text-black"
                   }`}
                   onClick={() => onTimeFrameChange("24h")}
                 >
@@ -50,8 +50,8 @@ export default function StatsCard({
                 <button
                   className={`px-2 py-1 ${
                     timeFrame === "ALL"
-                      ? "bg-purple-600 text-white"
-                      : "text-gray-400"
+                      ? "bg-white text-black"
+                      : "bg-gray-400 text-black"
                   }`}
                   onClick={() => onTimeFrameChange("ALL")}
                 >
