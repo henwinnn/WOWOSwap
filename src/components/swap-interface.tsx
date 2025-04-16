@@ -206,7 +206,7 @@ export default function SwapInterface() {
     } else {
       setAmountOut("0");
     }
-  }, [amountIn, fromToken, toToken, rate, balances, multipliers]);
+  }, [amountIn, fromToken, toToken, rate, balances, multipliers, mappedTokens]);
 
   const handleSwap = () => {
     setIsSwapping(true);
