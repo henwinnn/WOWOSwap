@@ -5,9 +5,9 @@ import { motion } from "framer-motion";
 import { Search, Plus, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import PoolRow from "./pool-row";
-import StatsCard from "./stats-card";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
+import StatsCard from "../ui/stats-card";
+// import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
 
 // Sample data for pools
 const poolsData = [
@@ -93,15 +93,12 @@ export default function PoolsInterface() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <StatsCard
-          title="Total Value Locked"
-          value={totalTVL}
-          format="currency"
-        />
+        <StatsCard title="Total Value Locked" value={totalTVL} format="currency" prefix="$" />
         <StatsCard
           title="Swap Volume"
           value={totalVolume}
           format="currency"
+          prefix="$"
           timeFrame={timeFrame}
           onTimeFrameChange={setTimeFrame}
         />
@@ -127,13 +124,13 @@ export default function PoolsInterface() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button
+              {/* <Button
                 className="ml-4 bg-gray-200 hover:bg-white text-black rounded-xl px-4 py-2 flex items-center"
                 onClick={() => router.push("/pool/create")}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Pool
-              </Button>
+              </Button> */}
             </div>
 
             {/* Table Header */}

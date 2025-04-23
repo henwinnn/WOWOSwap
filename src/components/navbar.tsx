@@ -53,6 +53,9 @@ export default function Navbar() {
             <NavLink href="/pool" active={pathname.startsWith("/pool")}>
               Pools
             </NavLink>
+            <NavLink href="/earn" active={pathname.startsWith("/earn")}>
+              Earn
+            </NavLink>
           </div>
         </div>
 
