@@ -1,17 +1,41 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { ChevronRight, ChevronDown, ChevronUp, Filter } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import StatsCard from "@/components/ui/stats-card"
-import TokenSelectorModal from "./token-selector-modal"
-import OpportunitySelectorModal from "./opportunity-selector-modal"
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { ChevronRight, ChevronDown, ChevronUp, Filter } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import StatsCard from "@/components/ui/stats-card";
+import TokenSelectorModal from "./token-selector-modal";
+import OpportunitySelectorModal from "./opportunity-selector-modal";
 
 // Sample token data
-const tokenData = [
+interface Token {
+  symbol: string;
+  name: string;
+  address: string;
+  balance: number;
+  color: string;
+}
+
+interface Vault {
+  id: string;
+  name: string;
+  symbol: string;
+  color: string;
+  apy: number;
+  tvl: number;
+  yearlyReward: number;
+  riskLevel: "low" | "medium" | "high";
+}
+
+const tokenData: Token[] = [
   {
     symbol: "WETH",
     name: "Wrapped Ethereum",
@@ -40,10 +64,10 @@ const tokenData = [
     balance: 0,
     color: "#627EEA",
   },
-]
+];
 
 // Sample vault data
-const vaultData = [
+const vaultData: Vault[] = [
   {
     id: "usdc-vault",
     name: "USDC Vault",
@@ -114,84 +138,91 @@ const vaultData = [
     yearlyReward: 0,
     riskLevel: "high",
   },
-]
+];
 
 export default function VaultInterface() {
-  const [isConnected, setIsConnected] = useState(false)
-  const [selectedAsset, setSelectedAsset] = useState<string | null>(null)
-  const [selectedVault, setSelectedVault] = useState<string | null>(null)
-  const [isTokenModalOpen, setIsTokenModalOpen] = useState(false)
-  const [isVaultModalOpen, setIsVaultModalOpen] = useState(false)
-  const [depositAmount, setDepositAmount] = useState<string>("0.00")
+  const [isConnected, setIsConnected] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
+  const [selectedVault, setSelectedVault] = useState<string | null>(null);
+  const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
+  const [isVaultModalOpen, setIsVaultModalOpen] = useState(false);
+  const [depositAmount, setDepositAmount] = useState<string>("0.00");
 
   // New state variables for sorting and display
-  const [sortCriteria, setSortCriteria] = useState<"apy" | "tvl" | "risk">("apy")
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
-  const [showAllVaults, setShowAllVaults] = useState(false)
+  const [sortCriteria, setSortCriteria] = useState<"apy" | "tvl" | "risk">(
+    "apy"
+  );
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [showAllVaults, setShowAllVaults] = useState(false);
 
   // Calculate total stats
-  const totalTVL = vaultData.reduce((sum, vault) => sum + vault.tvl, 0)
-  const avgAPY = vaultData.reduce((sum, vault) => sum + vault.apy, 0) / vaultData.length
+  const totalTVL = vaultData.reduce((sum, vault) => sum + vault.tvl, 0);
+  const avgAPY =
+    vaultData.reduce((sum, vault) => sum + vault.apy, 0) / vaultData.length;
 
   // Sort vaults based on criteria
   const sortVaults = () => {
     return [...vaultData].sort((a, b) => {
-      let comparison = 0
+      let comparison = 0;
 
       if (sortCriteria === "apy") {
-        comparison = a.apy - b.apy
+        comparison = a.apy - b.apy;
       } else if (sortCriteria === "tvl") {
-        comparison = a.tvl - b.tvl
+        comparison = a.tvl - b.tvl;
       } else if (sortCriteria === "risk") {
-        const riskOrder = { low: 1, medium: 2, high: 3 }
-        comparison = riskOrder[a.riskLevel as keyof typeof riskOrder] - riskOrder[b.riskLevel as keyof typeof riskOrder]
+        const riskOrder = { low: 1, medium: 2, high: 3 };
+        comparison =
+          riskOrder[a.riskLevel as keyof typeof riskOrder] -
+          riskOrder[b.riskLevel as keyof typeof riskOrder];
       }
 
-      return sortDirection === "desc" ? -comparison : comparison
-    })
-  }
+      return sortDirection === "desc" ? -comparison : comparison;
+    });
+  };
 
   // Get sorted vaults
-  const sortedVaults = sortVaults()
+  const sortedVaults = sortVaults();
 
   // Get vaults to display (top 3 or all)
-  const displayedVaults = showAllVaults ? sortedVaults : sortedVaults.slice(0, 3)
+  const displayedVaults = showAllVaults
+    ? sortedVaults
+    : sortedVaults.slice(0, 3);
 
   const handleConnectWallet = () => {
-    setIsConnected(true)
-  }
+    setIsConnected(true);
+  };
 
-  const handleTokenSelect = (token: any) => {
-    setSelectedAsset(token.symbol)
-    setDepositAmount("100.00") // Set a default amount for demo
-  }
+  const handleTokenSelect = (token: Token) => {
+    setSelectedAsset(token.symbol);
+    setDepositAmount("100.00"); // Set a default amount for demo
+  };
 
-  const handleVaultSelect = (vault: any) => {
-    setSelectedVault(vault.name)
-  }
+  const handleVaultSelect = (vault: Vault) => {
+    setSelectedVault(vault.name);
+  };
 
-  const getSelectedToken = () => {
-    return tokenData.find((token) => token.symbol === selectedAsset)
-  }
+  // const getSelectedToken = () => {
+  //   return tokenData.find((token) => token.symbol === selectedAsset)
+  // }
 
   const getSelectedVault = () => {
-    return vaultData.find((vault) => vault.name === selectedVault)
-  }
+    return vaultData.find((vault) => vault.name === selectedVault);
+  };
 
   // Toggle sort direction
   const toggleSortDirection = () => {
-    setSortDirection(sortDirection === "desc" ? "asc" : "desc")
-  }
+    setSortDirection(sortDirection === "desc" ? "asc" : "desc");
+  };
 
   // Change sort criteria
   const changeSortCriteria = (criteria: "apy" | "tvl" | "risk") => {
     if (sortCriteria === criteria) {
-      toggleSortDirection()
+      toggleSortDirection();
     } else {
-      setSortCriteria(criteria)
-      setSortDirection("desc")
+      setSortCriteria(criteria);
+      setSortDirection("desc");
     }
-  }
+  };
 
   return (
     <div className="w-full max-w-3xl mt-24">
@@ -202,13 +233,20 @@ export default function VaultInterface() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl font-bold text-white tracking-tight">WOWOswap Vaults</h1>
+        <h1 className="text-3xl font-bold text-white tracking-tight">
+          WOWOswap Vaults
+        </h1>
         <p className="text-gray-400 mt-1">Earn yield on your stablecoins</p>
       </motion.div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <StatsCard title="Total Value Locked" value={totalTVL} format="currency" prefix="$" />
+        <StatsCard
+          title="Total Value Locked"
+          value={totalTVL}
+          format="currency"
+          prefix="$"
+        />
         <StatsCard title="Average APY" value={avgAPY} format="percentage" />
       </div>
 
@@ -220,16 +258,19 @@ export default function VaultInterface() {
       >
         <Card className="bg-gray-900 border-gray-800 shadow-xl overflow-hidden rounded-3xl">
           <CardContent className="p-6 space-y-6">
-            
             {/* Asset Selection */}
             <div className="space-y-2">
               <h3 className="text-gray-400 text-sm">Asset</h3>
               <div className="bg-gray-800 rounded-xl p-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h2 className="text-3xl font-light text-white">{selectedAsset ? depositAmount : "0.00"}</h2>
+                    <h2 className="text-3xl font-light text-white">
+                      {selectedAsset ? depositAmount : "0.00"}
+                    </h2>
                     <p className="text-gray-400 text-sm mt-1">
-                      {selectedAsset ? `${selectedAsset} Selected` : "No token selected"}
+                      {selectedAsset
+                        ? `${selectedAsset} Selected`
+                        : "No token selected"}
                     </p>
                   </div>
                   <Button
@@ -250,10 +291,14 @@ export default function VaultInterface() {
                 <div className="flex justify-between items-center">
                   <div>
                     <h2 className="text-3xl font-medium text-white">
-                      {selectedVault ? `${getSelectedVault()?.apy.toFixed(2)}% APY` : `Up to ${avgAPY.toFixed(2)}% APY`}
+                      {selectedVault
+                        ? `${getSelectedVault()?.apy.toFixed(2)}% APY`
+                        : `Up to ${avgAPY.toFixed(2)}% APY`}
                     </h2>
                     <p className="text-gray-400 text-sm mt-1">
-                      {selectedVault ? `${selectedVault}` : "Select a vault to deposit"}
+                      {selectedVault
+                        ? `${selectedVault}`
+                        : "Select a vault to deposit"}
                     </p>
                   </div>
                   <Button
@@ -273,7 +318,11 @@ export default function VaultInterface() {
                 <h3 className="text-gray-400 text-sm">Available Vaults</h3>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 px-2 text-gray-400 hover:text-white">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-gray-400 hover:text-white"
+                    >
                       <Filter className="h-4 w-4 mr-1" />
                       Sort by: {sortCriteria.toUpperCase()}
                       {sortDirection === "desc" ? (
@@ -283,24 +332,33 @@ export default function VaultInterface() {
                       )}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 text-white">
+                  <DropdownMenuContent
+                    align="end"
+                    className="bg-gray-800 border-gray-700 text-white"
+                  >
                     <DropdownMenuItem
                       onClick={() => changeSortCriteria("apy")}
                       className="cursor-pointer hover:bg-gray-700"
                     >
-                      APY {sortCriteria === "apy" && (sortDirection === "desc" ? "↓" : "↑")}
+                      APY{" "}
+                      {sortCriteria === "apy" &&
+                        (sortDirection === "desc" ? "↓" : "↑")}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => changeSortCriteria("tvl")}
                       className="cursor-pointer hover:bg-gray-700"
                     >
-                      TVL {sortCriteria === "tvl" && (sortDirection === "desc" ? "↓" : "↑")}
+                      TVL{" "}
+                      {sortCriteria === "tvl" &&
+                        (sortDirection === "desc" ? "↓" : "↑")}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => changeSortCriteria("risk")}
                       className="cursor-pointer hover:bg-gray-700"
                     >
-                      Risk Level {sortCriteria === "risk" && (sortDirection === "desc" ? "↓" : "↑")}
+                      Risk Level{" "}
+                      {sortCriteria === "risk" &&
+                        (sortDirection === "desc" ? "↓" : "↑")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -312,7 +370,7 @@ export default function VaultInterface() {
                     key={vault.id}
                     className="bg-gray-800 rounded-xl p-4 hover:bg-gray-750 transition-colors cursor-pointer"
                     onClick={() => {
-                      setSelectedVault(vault.name)
+                      setSelectedVault(vault.name);
                     }}
                   >
                     <div className="flex justify-between items-center">
@@ -321,13 +379,20 @@ export default function VaultInterface() {
                           className="w-10 h-10 rounded-full flex items-center justify-center mr-3"
                           style={{ backgroundColor: vault.color }}
                         >
-                          <span className="text-sm font-bold text-white">{vault.symbol.charAt(0)}</span>
+                          <span className="text-sm font-bold text-white">
+                            {vault.symbol.charAt(0)}
+                          </span>
                         </div>
                         <div>
-                          <h3 className="font-medium text-white">{vault.name}</h3>
+                          <h3 className="font-medium text-white">
+                            {vault.name}
+                          </h3>
                           <div className="flex items-center">
                             <p className="text-gray-400 text-sm">
-                              TVL: ${vault.tvl.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                              TVL: $
+                              {vault.tvl.toLocaleString(undefined, {
+                                maximumFractionDigits: 2,
+                              })}
                             </p>
                             <span className="mx-2 text-gray-500">•</span>
                             <p
@@ -335,17 +400,21 @@ export default function VaultInterface() {
                                 vault.riskLevel === "low"
                                   ? "text-green-400"
                                   : vault.riskLevel === "medium"
-                                    ? "text-yellow-400"
-                                    : "text-red-400"
+                                  ? "text-yellow-400"
+                                  : "text-red-400"
                               }`}
                             >
-                              {vault.riskLevel.charAt(0).toUpperCase() + vault.riskLevel.slice(1)} Risk
+                              {vault.riskLevel.charAt(0).toUpperCase() +
+                                vault.riskLevel.slice(1)}{" "}
+                              Risk
                             </p>
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-white font-medium">{vault.apy.toFixed(2)}% APY</p>
+                        <p className="text-white font-medium">
+                          {vault.apy.toFixed(2)}% APY
+                        </p>
                         <p className="text-gray-400 text-sm">Variable rate</p>
                       </div>
                     </div>
@@ -366,7 +435,8 @@ export default function VaultInterface() {
                     </>
                   ) : (
                     <>
-                      <ChevronDown className="h-4 w-4 mr-2" /> Show More Vaults ({vaultData.length - 3} more)
+                      <ChevronDown className="h-4 w-4 mr-2" /> Show More Vaults
+                      ({vaultData.length - 3} more)
                     </>
                   )}
                 </Button>
@@ -376,7 +446,11 @@ export default function VaultInterface() {
             {/* Select Token Or Opportunity Button */}
             <Button
               className="w-full h-14 text-lg font-medium bg-white hover:bg-gray-100 text-black rounded-full transition-all duration-300"
-              onClick={isConnected ? () => setIsTokenModalOpen(true) : handleConnectWallet}
+              onClick={
+                isConnected
+                  ? () => setIsTokenModalOpen(true)
+                  : handleConnectWallet
+              }
             >
               <motion.div
                 className="flex items-center justify-center"
@@ -416,5 +490,5 @@ export default function VaultInterface() {
         <p>WOWOswap v1.0 • Yield Vaults</p>
       </motion.div>
     </div>
-  )
+  );
 }

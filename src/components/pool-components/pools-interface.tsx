@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Plus, ChevronDown } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Search, ChevronDown } from "lucide-react";
 import PoolRow from "./pool-row";
 import StatsCard from "../ui/stats-card";
 // import { Button } from "../ui/button";
@@ -63,7 +62,7 @@ const poolsData = [
 ];
 
 export default function PoolsInterface() {
-  const router = useRouter();
+  // const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [timeFrame, setTimeFrame] = useState<"24h" | "ALL">("24h");
 
@@ -93,7 +92,12 @@ export default function PoolsInterface() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <StatsCard title="Total Value Locked" value={totalTVL} format="currency" prefix="$" />
+        <StatsCard
+          title="Total Value Locked"
+          value={totalTVL}
+          format="currency"
+          prefix="$"
+        />
         <StatsCard
           title="Swap Volume"
           value={totalVolume}
