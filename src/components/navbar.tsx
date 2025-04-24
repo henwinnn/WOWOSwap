@@ -66,7 +66,15 @@ export default function Navbar() {
         </div>
 
         {/* Connect Wallet Button */}
-        <ConnectButton />
+
+        <div
+          style={{
+            // wordBreak: "break-all",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <ConnectButton />
+        </div>
       </div>
     </motion.nav>
   );
