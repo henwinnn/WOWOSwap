@@ -33,20 +33,26 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo and Navigation */}
-        <div className="flex items-center space-x-8">
+        <div
+          className="flex items-center space-x-8"
+          style={{ width: "60%", paddingRight: "10px" }}
+        >
           <Link href="/">
             <motion.div
               className="flex items-center"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <span className="text-white font-bold text-xl tracking-tight">
+              <span
+                className="text-white font-bold text-xl tracking-tight"
+                style={{ width: "100px" }}
+              >
                 WOWOSwap
               </span>
             </motion.div>
           </Link>
 
-          <div className="hidden md:flex space-x-6">
+          <div className="md:flex space-x-6" style={{ overflow: "auto" }}>
             <NavLink href="/" active={pathname === "/"}>
               Swap
             </NavLink>
