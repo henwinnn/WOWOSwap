@@ -1,8 +1,5 @@
-// import PoolCreationInterface from "@/src/components/pool-creation-interface";
-// import Navbar from "@/src/components/navbar";
-
 import Navbar from "@/components/navbar";
-import PoolCreationInterface from "@/components/pool-creation-interface";
+import PoolCreationInterface from "@/components/pool-components/pool-creation-interface";
 
 export default function CreatePoolPage() {
   return (

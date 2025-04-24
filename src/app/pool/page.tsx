@@ -1,5 +1,5 @@
 import Navbar from "@/components/navbar";
-import PoolsInterface from "@/components/pools-interface";
+import PoolsInterface from "@/components/pool-components/pools-interface";
 
 export default function PoolsPage() {
   return (

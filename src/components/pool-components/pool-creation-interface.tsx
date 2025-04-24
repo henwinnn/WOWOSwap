@@ -3,39 +3,24 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Info, ArrowRight, ExternalLink } from "lucide-react";
-// import { Card, CardContent } from "@/src/components/ui/card";
-// import { Button } from "@/src/components/ui/button";
 import { useRouter } from "next/navigation";
-import TokenSelector from "./token-selector";
-import type { Token } from "./swap-interface";
-// import {
-//   Tooltip,
-//   TooltipContent,
-//   TooltipProvider,
-//   TooltipTrigger,
-// } from "@/src/components/ui/tooltip";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/src/components/ui/select";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
+import TokenSelector from "../token-selector";
+import type { Token } from "../swap-interface";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "./ui/tooltip";
+} from "../ui/tooltip";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "../ui/select";
 
 // Sample tokens for selection
 const availableTokens: Token[] = [
@@ -44,7 +29,7 @@ const availableTokens: Token[] = [
     name: "USD Coin",
     symbol: "USDC",
     color: "#2775CA",
-    balance: BigInt(125075), // Converted to BigInt, removed decimal
+    balance: BigInt(125075),
     index: 0,
   },
   {
@@ -52,7 +37,7 @@ const availableTokens: Token[] = [
     name: "Euro Coin",
     symbol: "EURC",
     color: "#0052B4",
-    balance: BigInt(89032), // Converted to BigInt, removed decimal
+    balance: BigInt(89032),
     index: 1,
   },
   {
@@ -60,7 +45,7 @@ const availableTokens: Token[] = [
     name: "Indonesian Rupiah",
     symbol: "IDRX",
     color: "#FF0000",
-    balance: BigInt(7500000), // Converted to BigInt
+    balance: BigInt(7500000),
     index: 2,
   },
   {
@@ -68,7 +53,7 @@ const availableTokens: Token[] = [
     name: "Solana",
     symbol: "SOL",
     color: "#14F195",
-    balance: BigInt(4550), // Converted to BigInt, removed decimal
+    balance: BigInt(4550),
     index: 3,
   },
   {
@@ -76,7 +61,7 @@ const availableTokens: Token[] = [
     name: "Bitcoin",
     symbol: "BTC",
     color: "#F7931A",
-    balance: BigInt(50), // Converted to BigInt, removed decimal
+    balance: BigInt(50),
     index: 4,
   },
 ];
@@ -108,7 +93,6 @@ export default function PoolCreationInterface() {
 
   const addQuoteToken = () => {
     if (quoteTokens.length < 2) {
-      // Find a token that's not already selected
       const availableToken = availableTokens.find(
         (token) =>
           token.id !== baseToken.id &&
@@ -137,14 +121,12 @@ export default function PoolCreationInterface() {
   };
 
   const handleInitialPriceChange = (value: string) => {
-    // Only allow numbers and a single decimal point
     if (/^(\d*\.?\d{0,8})$/.test(value) || value === "") {
       setInitialPrice(value);
     }
   };
 
   const handleCreatePool = () => {
-    // Implement pool creation logic here
     console.log({
       baseToken,
       quoteTokens,
@@ -153,12 +135,9 @@ export default function PoolCreationInterface() {
       initialPrice,
       isMultiPool,
     });
-
-    // Navigate back to pools page after creation
     router.push("/pool");
   };
 
-  // Filter tokens that are not already selected
   const getAvailableTokensForSelector = (
     currentToken: Token,
     isBase: boolean
@@ -180,7 +159,6 @@ export default function PoolCreationInterface() {
 
   return (
     <div className="w-full max-w-2xl mt-24">
-      {/* Title */}
       <motion.div
         className="flex flex-col items-center mb-10"
         initial={{ opacity: 0, y: -20 }}
@@ -193,7 +171,6 @@ export default function PoolCreationInterface() {
         <p className="text-gray-400 mt-1">Select tokens for pool creation</p>
       </motion.div>
 
-      {/* Main creation card */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -202,7 +179,6 @@ export default function PoolCreationInterface() {
         <Card className="bg-gray-900 border-gray-800 shadow-xl overflow-hidden rounded-3xl">
           <CardContent className="p-6">
             <div className="space-y-6">
-              {/* Base token */}
               <div>
                 <div className="flex items-center mb-2">
                   <h3 className="text-white font-medium">Base token</h3>
@@ -222,7 +198,6 @@ export default function PoolCreationInterface() {
                 </div>
               </div>
 
-              {/* Quote tokens */}
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-white font-medium">
@@ -278,7 +253,6 @@ export default function PoolCreationInterface() {
                 </div>
               </div>
 
-              {/* Base Fee */}
               <div>
                 <div className="flex items-center mb-2">
                   <h3 className="text-white font-medium">Base Fee</h3>
@@ -315,7 +289,6 @@ export default function PoolCreationInterface() {
                 </Select>
               </div>
 
-              {/* Bin Step */}
               <div>
                 <div className="flex items-center mb-2">
                   <h3 className="text-white font-medium">Bin Step</h3>
@@ -352,7 +325,6 @@ export default function PoolCreationInterface() {
                 </Select>
               </div>
 
-              {/* Initial Price */}
               <div>
                 <div className="flex items-center mb-2">
                   <h3 className="text-white font-medium">Initial Price</h3>
@@ -383,27 +355,10 @@ export default function PoolCreationInterface() {
                     <span>
                       {quoteTokens[0].symbol} per {baseToken.symbol}
                     </span>
-                    <button className="ml-2 text-gray-400 hover:text-white">
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
                   </div>
                 </div>
                 <div className="mt-2 flex items-center text-gray-400 text-sm">
                   <div className="flex items-center">
-                    <svg
-                      className="h-4 w-4 mr-2"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                      <path d="M2 17l10 5 10-5" />
-                      <path d="M2 12l10 5 10-5" />
-                    </svg>
                     <span>
                       Estimated market price: 0.007774 {quoteTokens[0].symbol}{" "}
                       per {baseToken.symbol}
@@ -416,7 +371,6 @@ export default function PoolCreationInterface() {
                 </div>
               </div>
 
-              {/* Create Pool Button */}
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -441,7 +395,6 @@ export default function PoolCreationInterface() {
         </Card>
       </motion.div>
 
-      {/* Footer */}
       <motion.div
         className="mt-8 text-center text-gray-500 text-sm"
         initial={{ opacity: 0 }}
